@@ -115,3 +115,15 @@ fragment:
   - name: bench-aesdma-ov-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-ov-img]
+
+  # Item 14c: 3-stage pipeline, AES op i beside (store i-1; fetch i+1).
+  - name: bench-aesdma-pipe-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE]
+
+  - name: bench-aesdma-pipe-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-img]

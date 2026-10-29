@@ -12,13 +12,15 @@ package fw_aes_dma_pkg;
         fw_aes_dma_regs        m_regs;
         fw_aes_api             m_aes;
         wb_proto_if #(32, 32)  m_master;
-        bit                    m_overlap;  // fetch block i+1 during AES op i (item 14b)
+        // Block-loop schedule: 0 serial; 1 overlap fetch i+1 with AES op i
+        // (item 14b); 2 pipeline: op i beside (store i-1; fetch i+1) (item 14c).
+        int unsigned           m_sched;
 
-        function new(fw_aes_api aes, wb_proto_if #(32, 32) master, bit overlap = 0);
+        function new(fw_aes_api aes, wb_proto_if #(32, 32) master, int unsigned sched = 0);
             m_regs    = new("regs");
             m_aes     = aes;
             m_master  = master;
-            m_overlap = overlap;
+            m_sched   = sched;
         endfunction
 
         virtual task access(
@@ -53,7 +55,8 @@ package fw_aes_dma_pkg;
             status.BUSY = 1;
             m_regs.STATUS.update_val(status);
             m_aes.set_key(key, aes_mode_e'(ctrl.MODE));
-            if (m_overlap) run_overlap(ctrl, src, dst, n, status);
+            if (m_sched == 1)      run_overlap(ctrl, src, dst, n, status);
+            else if (m_sched == 2) run_pipe(ctrl, src, dst, n, status);
             else
             for (int b = 0; b < n && !status.ERROR; b++) begin
                 for (int w = 0; w < 4 && !status.ERROR; w++) begin
@@ -115,6 +118,56 @@ package fw_aes_dma_pkg;
                 status.ERROR = nerr;
                 m_regs.STATUS.update_val(status);
                 cur = nxt;
+            end
+        endtask
+
+        protected task store(bit [31:0] adr, block_t dout, output bit err);
+            bit [31:0] rd;
+            err = 0;
+            for (int w = 0; w < 4 && !err; w++)
+                m_master.access(adr + 4*w, dout[127-32*w -: 32], 4'hF, 1, rd, err);
+        endtask
+
+        // 3-stage pipeline: the AES op on b runs beside store b-1 then fetch
+        // b+1 (one master, so store and fetch stay in sequence). A fetch error
+        // on b+1 is reported after b is stored, as in run_overlap.
+        protected task run_pipe(
+                fw_aes_dma_regs__CTRL_t ctrl, bit [31:0] src, bit [31:0] dst,
+                int unsigned n, inout fw_aes_dma_regs__STATUS_t status);
+            block_t    cur, nxt, dout, prev;
+            bit        err, serr, nerr, ferr = 0;
+            if (n == 0) return;
+            fetch(src, cur, err);
+            status.ERROR = err;
+            if (err) return;
+            for (int b = 0; b <= n; b++) begin
+                serr = 0;
+                nerr = 0;
+                fork
+                    if (b < n && !ferr) begin
+                        if (ctrl.DECRYPT) m_aes.decrypt(cur, dout);
+                        else              m_aes.encrypt(cur, dout);
+                    end
+                    begin
+                        if (b > 0) store(dst + 16*(b-1), prev, serr);
+                        if (!serr && !ferr && b + 1 < n) fetch(src + 16*(b+1), nxt, nerr);
+                    end
+                join
+                if (serr) begin
+                    status.ERROR = 1;
+                    break;
+                end
+                if (b > 0) begin
+                    status.COUNT = 16'(b);
+                    m_regs.STATUS.update_val(status);
+                end
+                if (ferr) begin
+                    status.ERROR = 1;
+                    break;
+                end
+                ferr = nerr;
+                prev = dout;
+                cur  = nxt;
             end
         endtask
     endclass

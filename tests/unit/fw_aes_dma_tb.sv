@@ -63,7 +63,9 @@ module fw_aes_dma_tb;
     initial begin
         mem_t      mem = new();
         fw_aes_v3  v3  = new(bus);
-`ifdef FW_AES_DMA_OVERLAP
+`ifdef FW_AES_DMA_PIPE
+        fw_aes_dma d   = new(v3, mem, 2);
+`elsif FW_AES_DMA_OVERLAP
         fw_aes_dma d   = new(v3, mem, 1);
 `else
         fw_aes_dma d   = new(v3, mem);

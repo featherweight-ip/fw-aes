@@ -63,7 +63,10 @@ module fw_aes_dma_bench_tb;
         bit        err;
         data_t     w;
 
-`ifdef FW_AES_DMA_OVERLAP
+`ifdef FW_AES_DMA_PIPE
+        dec.aes = new(v3, dec, 2);
+        `define AESDMA_VIEW "aesdma-pipe"
+`elsif FW_AES_DMA_OVERLAP
         dec.aes = new(v3, dec, 1);
         `define AESDMA_VIEW "aesdma-ov"
 `else

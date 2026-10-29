@@ -81,13 +81,14 @@ block (tests/bench/fw_aes_dma_bench_tb.sv).
 | fw-aes + fw-wb-dma (v3)   | bench-v3-run     | 128  | 0.062500   |
 | fw-aes-dma (v3)           | bench-aesdma-run | 76   | 0.105263   |
 | fw-aes-dma overlap (v3)   | bench-aesdma-ov-run | 55 | 0.145455   |
+| fw-aes-dma pipeline (v3)  | bench-aesdma-pipe-run | 50 | 0.160000 |
 
 1.68x fewer clocks. The gain is all bus/control traffic: the timed region of
 fw-aes-dma makes 69 accesses (4 descriptor/START, 64 fetch/store, 1 STATUS),
 while the baseline programs two DMA channels per block, polls DONE and writes
 CTRL. The AES op (4 clks/block, 32 total) is unchanged and still serial with
 fetch and store in the serial loop. Item 14b, a hand-scheduled stand-in for
-the co-synthesis step (PLAN Ph4): ctor flag `overlap` in fw_aes_dma
+the co-synthesis step (PLAN Ph4): ctor arg `sched` = 1 in fw_aes_dma
 (`run_overlap()`) forks the AES op on block i with the fetch of block i+1,
 then stores i; 55 clks (1.38x vs serial, 2.33x vs baseline), same 69
 accesses. Bus fetch (4 x 7 ns) and the 4-clk op now hide each other; stores
@@ -95,6 +96,15 @@ stay serial. In the unit test (aes-dma-ov-run) the bus-error case makes 65
 accesses vs 61 (block 2 prefetched before the failing store of block 1);
 COUNT/ERROR/DONE are unchanged. The TL bench charges no
 arbitration between host and the fw-aes-dma master (one decoder, sequential).
+
+Item 14c: `sched` = 2 (`run_pipe()`), a 3-stage pipeline: the AES op on
+block i runs beside (store i-1; fetch i+1), which stay in sequence on the one
+WB master. 50 clks (1.10x vs overlap, 1.52x vs serial, 2.56x vs baseline),
+same 69 accesses. The loop is now bus-bound: 8 accesses x 7 ns per block
+(5.6 clks) vs the 4-clk op, so a further gain needs a wider or second bus
+port, not more scheduling. Unit test (aes-dma-pipe-run): 65 accesses, AES
+clks 36 (op on block 2 runs beside the failing store of block 1);
+COUNT/ERROR/DONE unchanged.
 
 ## Cycle fidelity V3 vs A0 RTL (item 9): `dfm run vectors-run-fid`
 
