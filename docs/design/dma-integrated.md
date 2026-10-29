@@ -1,19 +1,23 @@
-# DMA built into fw-aes (co-design variant)
+# DMA built into fw-aes (integrated configuration)
 
 Owner question: shouldn't the DMA be built into fw-aes, for more
 co-design/co-synthesis opportunities?
 
 ## Decision
 
-Yes, as a **variant**, not a replacement.
+**Both, as peers** (owner, batch 2). Neither is the baseline of the other;
+standalone-vs-integrated.md lists the questions each one answers and where
+they differ.
 
-- **Opaque baseline (kept):** the current system bench (`tests/bench`):
+- **Standalone (fw-aes + external DMA):** the system bench (`tests/bench`):
   fw-aes is a Wishbone CSR target (`src/rdl/fw_aes_regs.rdl`,
   `fw_aes_wb_target`), and a separate fw-wb-dma moves blocks
-  mem -> DIN and DOUT -> mem. The two blocks are synthesized separately and
-  the bus between them is fixed. Plan Ph4 compares co-synthesis results
-  against this "opaque baseline", so it has to stay.
-- **Variant fw-aes-dma (new):** fw-aes gets its own Wishbone master port and
+  mem -> DIN and DOUT -> mem. AES is a client and the system moves the data:
+  the closest match to what XLS supports alone (a datapath compiled to RTL
+  and placed in a fixed system). Plan Ph4's "opaque baseline" comparison
+  uses it.
+- **Integrated (fw-aes-dma):** where the multi-view flow answers bandwidth
+  and latency questions. fw-aes gets its own Wishbone master port and
   descriptor registers:
   - `SRC`, `DST` (byte addresses), `LEN` (blocks), `CTRL` (start, mode
     enc/dec, irq enable), `STATUS` (busy, done, error).
