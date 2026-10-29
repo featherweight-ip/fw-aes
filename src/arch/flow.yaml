@@ -1,5 +1,10 @@
 # yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
 #
-# The architecture specs (A0-A5, plan §7.2).
+# The architecture specs (A0-A5, plan §7.2). Format: docs/design/arch-specs.md.
 fragment:
-  tasks: []
+  tasks:
+  - export: arch-specs
+    uses: std.FileSet
+    with:
+      type: yaml
+      include: ["a[0-9].yaml"]

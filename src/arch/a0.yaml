@@ -1,0 +1,10 @@
+# A0: the XLS baseline. All 10/14 rounds unrolled, one block per clock.
+arch: A0
+algorithm: aes_pkg::encrypt     # and aes_pkg::decrypt, same spec
+fold: unrolled                  # unrolled | iterated | column | byte
+sbox_count: 200                 # 10 rounds x 16 + 40 key-expansion (AES-128)
+sbox_kind: lut                  # lut | canright
+ii: 1                           # clks between accepted blocks
+latency: 4                      # clks from start to result at the fw_aes_api
+pipeline_stages: 2              # XLS codegen pipeline_stages
+target: ecp5

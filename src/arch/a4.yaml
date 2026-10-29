@@ -1,0 +1,10 @@
+# A4: two rounds unrolled per stage, iterated 5x; II = latency.
+arch: A4
+algorithm: aes_pkg::encrypt
+fold: unrolled
+unroll: 2                       # rounds per clock (fold: unrolled + unroll < 10)
+sbox_count: 32
+sbox_kind: canright
+ii: 6
+latency: 6                      # 1 load + 5 double-rounds
+target: ecp5

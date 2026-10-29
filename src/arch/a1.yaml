@@ -1,0 +1,9 @@
+# A1: one round per clock, round logic reused 10x (iterated).
+arch: A1
+algorithm: aes_pkg::encrypt
+fold: iterated
+sbox_count: 16                  # one full state; key expansion shares them
+sbox_kind: lut
+ii: 11                          # no overlap between blocks
+latency: 11                     # 1 load + 10 rounds
+target: ecp5

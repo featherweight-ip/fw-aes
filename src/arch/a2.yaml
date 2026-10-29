@@ -1,0 +1,9 @@
+# A2: one column (4 S-boxes) per clock; 4 clks per round.
+arch: A2
+algorithm: aes_pkg::encrypt
+fold: column
+sbox_count: 4
+sbox_kind: lut
+ii: 44
+latency: 44                     # 10 rounds x 4 + load/key steps; may reach 50
+target: ecp5

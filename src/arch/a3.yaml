@@ -1,0 +1,9 @@
+# A3: one byte (1 S-box) per clock, composite-field S-box. Smallest area.
+arch: A3
+algorithm: aes_pkg::encrypt
+fold: byte
+sbox_count: 1
+sbox_kind: canright
+ii: 160
+latency: 160                    # 10 rounds x 16 bytes; key schedule adds more
+target: ecp5
