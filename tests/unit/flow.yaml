@@ -45,7 +45,25 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-rtl]
 
-  # CSR access test: the generated fw-hdl register model, by address.
+  # The same vectors on the `v3` view (stage-TLM from the A0 schedule).
+  - name: vectors-v3-tb
+    uses: std.FileSet
+    needs: [v3-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v3_tb.sv]
+
+  - name: vectors-img-v3
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v3-tb]
+    with:
+      top: [fw_aes_vectors_v3_tb]
+
+  - name: vectors-run-v3
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v3]
+
+  # CSR access test:the generated fw-hdl register model, by address.
   - name: csr-tb
     uses: std.FileSet
     needs: [fw-hdl.hdl.sv-src, reg-model]

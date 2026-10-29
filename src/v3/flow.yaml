@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# The `v3` view: stage-TLM fw_aes_api, hand-written from the A0 schedule
+# until the XLS schedule import exists.
+fragment:
+  tasks:
+  - export: v3-view
+    uses: std.FileSet
+    needs: [spl]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_v3.sv]
