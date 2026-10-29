@@ -37,3 +37,28 @@ fragment:
       # host (docs/design/baseline.md); encrypt takes ~320 s, 15 GB.
       top: aes_pkg__encrypt
       formats: [json]
+
+  # ---- A0 equivalence (item 6c): unoptimized IR of aes_pkg::encrypt vs the
+  # opt IR that codegen schedules. Encrypt only, in its own IR/Codegen pair,
+  # since Equiv picks packages by top name and a0-rtl holds two. ----
+  - name: a0-ir-enc
+    uses: fw.hdl.xls.IR
+    needs: [aes-pkg]
+    with:
+      top: [aes_pkg::encrypt]
+
+  - name: a0-rtl-enc
+    uses: synth.xls.Codegen
+    needs: [a0-ir-enc]
+    with:
+      pipeline_stages: 2
+      input_valid_signal: input_valid
+      output_valid_signal: output_valid
+
+  - name: a0-equiv
+    desc: check_ir_equivalence of A0 encrypt, fw.hdl.xls.IR vs Codegen opt IR
+    uses: synth.xls.Equiv
+    needs: [a0-ir-enc, a0-rtl-enc]
+    with:
+      timeout_s: 600
+      gate: false

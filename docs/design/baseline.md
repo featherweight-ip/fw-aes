@@ -26,9 +26,31 @@ What this shows:
   2.34) on a 60 GB host. The task therefore synthesizes encrypt only (`top:
   aes_pkg__encrypt`).
 
-## Still to do (outline item 6b, 6c)
+## Fmax (item 6b): none, A0 does not fit
 
-- Fmax: nextpnr-ecp5 cannot place a design this size on an ECP5. Options:
-  out-of-context timing on a smaller unit (one round), or a bigger part.
-- Equivalence verdict (synth.yosys.Equiv / synth.xls.Equiv) and simulation
-  speed of `vectors-run-rtl`.
+`nextpnr-ecp5 --85k --package CABGA381 --json aes_pkg__encrypt.netlist.json`
+(8 s, 1.9 GB) reports `Total LUT4s: 106170/83640 126%` and stops with
+`ERROR: Unable to place cell 'block_[23]$tr_io', no BELs remaining ... TRELLIS_IO`.
+The bare module's ports need far more pins than the package has, and its
+logic is 126% of the LUTs. So the A0 Fmax result is "does not fit
+LFE5U-85F". Timing numbers start with A1-A4 (Phase 2), which are much smaller.
+
+## Equivalence (item 6c): `dfm run a0-equiv`
+
+`synth.xls.Equiv` (`check_ir_equivalence_main`) of A0 encrypt: the IR that
+`fw.hdl.xls.IR` makes from `aes_pkg::encrypt` (`a0-ir-enc`) vs the optimized
+IR that codegen schedules (`a0-rtl-enc`). Verdict: **inconclusive**. The
+solver had no answer after 600 s (2.9 GB); with 256 input bits there is no
+exhaustive fallback. `gate: false` so the task does not fail. The FIPS-197
+vectors pass on the RTL (`vectors-run-rtl`), so A0's evidence is simulation,
+not a proof. Yosys equivalence of the 106k-LUT netlist was not tried: the
+synth alone takes 15 GB, and the IR-level check already times out.
+(Equiv selects packages by top name, so `a0-rtl` (encrypt + decrypt) cannot
+be used; `a0-ir-enc`/`a0-rtl-enc` are an encrypt-only IR/Codegen pair.)
+
+## Simulation speed (item 6c): `vectors-run-rtl`
+
+Verilator 5.052, 1 thread: 3 vectors x (encrypt + decrypt) = 6 ops at 4
+clks/op, simtime 185 ps, wall 0.001 s, 6 MB (sim_stats.json). The run is too
+short to give a rate: start-up dominates. Throughput (blocks/s, kclk/s) needs
+a long run and is item 10 (V3 vs V5).
