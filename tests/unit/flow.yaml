@@ -37,3 +37,21 @@ fragment:
   - name: csr-run
     uses: hdlsim.vlt.SimRun
     needs: [csr-img]
+
+  # fw-aes driven by bus accesses through its Wishbone target (V0).
+  - name: wb-tb
+    uses: std.FileSet
+    needs: [wb-target]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_wb_tb.sv]
+
+  - name: wb-img
+    uses: hdlsim.vlt.SimImage
+    needs: [wb-tb]
+    with:
+      top: [fw_aes_wb_tb]
+
+  - name: wb-run
+    uses: hdlsim.vlt.SimRun
+    needs: [wb-img]

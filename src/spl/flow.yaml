@@ -13,3 +13,11 @@ fragment:
   - export: spl
     uses: std.FileSet
     needs: [fw-aes-api-pkg]
+
+  # fw-aes as a Wishbone target (transaction level): CSR block + an API view.
+  - export: wb-target
+    uses: std.FileSet
+    needs: [spl, fw-hdl.hdl.sv-src, fw.proto.wb.files, reg-model]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_wb_pkg.sv]
