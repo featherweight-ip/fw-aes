@@ -36,6 +36,7 @@ package:
   - hdllint
   - fw.proto.wb
   - fw-hdl
+  - rdl
 
   fragments:
   - src/rdl/flow.yaml

@@ -1,0 +1,61 @@
+// Register map of fw-aes: one 32-bit WISHBONE word per register.
+//
+// The 256-bit key is KEY0..KEY7, the 128-bit block in and out DIN0..3 and
+// DOUT0..3. Byte order follows fw_aes_api_pkg (key_t, block_t): byte 0 of
+// the key or block is in bits [31:24] of KEY0 / DIN0 / DOUT0. AES-128 uses
+// KEY0..KEY3 only.
+//
+// CTRL.MODE is aes_mode_e (KEY_128 = 0, KEY_256 = 2, as aes_pkg KeyWidth).
+// Writing CTRL.START = 1 starts one block (encrypt, or decrypt if
+// CTRL.DECRYPT); STATUS.BUSY is set until the block is done, then
+// STATUS.DONE is set and DOUT holds the result.
+
+addrmap fw_aes_regs {
+    name = "fw-aes";
+    desc = "Register map of fw-aes: key, data in/out, control and status.";
+
+    default regwidth = 32;
+    default accesswidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg data_word_r {
+        field { desc = "Four bytes, the lowest-numbered in [31:24]."; } WORD[31:0] = 0;
+    };
+
+    reg dout_word_r {
+        field { sw = r; hw = w; desc = "Four result bytes, the lowest-numbered in [31:24]."; } WORD[31:0] = 0;
+    };
+
+    data_word_r KEY0 @ 0x00;
+    data_word_r KEY1 @ 0x04;
+    data_word_r KEY2 @ 0x08;
+    data_word_r KEY3 @ 0x0C;
+    data_word_r KEY4 @ 0x10;
+    data_word_r KEY5 @ 0x14;
+    data_word_r KEY6 @ 0x18;
+    data_word_r KEY7 @ 0x1C;
+
+    data_word_r DIN0 @ 0x20;
+    data_word_r DIN1 @ 0x24;
+    data_word_r DIN2 @ 0x28;
+    data_word_r DIN3 @ 0x2C;
+
+    dout_word_r DOUT0 @ 0x30;
+    dout_word_r DOUT1 @ 0x34;
+    dout_word_r DOUT2 @ 0x38;
+    dout_word_r DOUT3 @ 0x3C;
+
+    reg {
+        desc = "Control.";
+        field { singlepulse; desc = "Write 1 to start one block."; } START[0:0] = 0;
+        field { desc = "1: decrypt, 0: encrypt."; } DECRYPT[1:1] = 0;
+        field { desc = "Key width (aes_mode_e): 0 = 128, 2 = 256."; } MODE[3:2] = 0;
+    } CTRL @ 0x40;
+
+    reg {
+        desc = "Status.";
+        field { sw = r; hw = w; desc = "A block is in progress."; } BUSY[0:0] = 0;
+        field { sw = r; hw = w; desc = "The last block is done; DOUT is valid."; } DONE[1:1] = 0;
+    } STATUS @ 0x44;
+};

@@ -19,3 +19,21 @@ fragment:
   - name: vectors-run-v0
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v0]
+
+  # CSR access test: the generated fw-hdl register model, by address.
+  - name: csr-tb
+    uses: std.FileSet
+    needs: [fw-hdl.hdl.sv-src, reg-model]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_csr_tb.sv]
+
+  - name: csr-img
+    uses: hdlsim.vlt.SimImage
+    needs: [csr-tb]
+    with:
+      top: [fw_aes_csr_tb]
+
+  - name: csr-run
+    uses: hdlsim.vlt.SimRun
+    needs: [csr-img]

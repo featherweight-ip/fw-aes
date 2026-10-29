@@ -1,5 +1,23 @@
 # yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
 #
-# The SystemRDL register block (key, mode, ctrl, status).
+# The SystemRDL register block (key, data in/out, ctrl, status) and the
+# fw-hdl register model generated from it (peakrdl-fw-hdl).
 fragment:
-  tasks: []
+  tasks:
+  - export: rdl-src
+    uses: std.FileSet
+    with:
+      type: systemRDLSource
+      include:
+      - fw_aes_regs.rdl
+
+  - export: reg-model
+    uses: rdl.Export
+    needs: [rdl-src]
+    with:
+      format: fw-hdl
+      top: fw_aes_regs
+      filename: fw_aes_reg_pkg.sv
+      options:
+        package-name: fw_aes_reg_pkg
+        type-style: lexical
