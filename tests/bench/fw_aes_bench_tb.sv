@@ -27,6 +27,18 @@ module fw_aes_bench_tb;
     localparam addr_t CH_CSR = 'h0, CH_SZ = 'h4, CH_ADR0 = 'h8, CH_ADR1 = 'h10;
 
     int unsigned clks = 0;
+    logic clk = 1'b0;
+    logic rst = 1'b0;
+
+    // The api view under test, made before the root builds the env.
+`ifdef FW_AES_BENCH_RTL
+    localparam string VIEW = "rtl";     // A0 XLS RTL
+    fw_aes_rtl_if u_rtl_if(clk);
+    fw_aes_rtl    u_rtl(u_rtl_if);
+`else
+    localparam string VIEW = "v0";
+`endif
+    fw_aes_api aes_view;
 
     // ---- address decoder: memory + fw-aes behind one wb_proto_if ------------
     class bus_dec extends fw_component;
@@ -127,8 +139,8 @@ module fw_aes_bench_tb;
                 $display("FAIL: reference C.1 mismatch"); errors++;
             end
 
-            $display("BENCH: view=v0 blocks=%0d clks=%0d blocks/clk=%f",
-                     NB, c0, real'(NB) / real'(c0));
+            $display("BENCH: view=%s blocks=%0d clks=%0d blocks/clk=%f",
+                     VIEW, NB, c0, real'(NB) / real'(c0));
             if (errors == 0) $display("TEST PASSED");
             else             $display("TEST FAILED: %0d errors", errors);
             $finish;
@@ -143,10 +155,9 @@ module fw_aes_bench_tb;
         function new(string name, fw_component parent); super.new(name, parent); endfunction
 
         function void build();
-            fw_aes_v0 v0 = new();
             dma = new("dma", this, 4);
             dec = new("dec", this);
-            dec.aes = new(v0);
+            dec.aes = new(aes_view);
             h   = new("h", this);
         endfunction
 
@@ -160,15 +171,23 @@ module fw_aes_bench_tb;
 
     // The model is delay-driven; the clock seats the root domain and counts
     // cycles for the blocks/clk figure.
-    logic clk = 1'b0;
-    logic rst = 1'b0;
     always #5ns clk = ~clk;
     always @(posedge clk) clks++;
     fw_clock_xtor_if u_clk(.clock(clk), .reset(rst));
 
     initial begin
-        automatic fw_component_root #(bench_env) root = new("root");
-        automatic fw_clock_xtor_bridge clk_dom = new("clock", root, u_clk);
+        automatic fw_component_root #(bench_env) root;
+        automatic fw_clock_xtor_bridge clk_dom;
+`ifdef FW_AES_BENCH_RTL
+        automatic fw_aes_rtl_pkg::fw_aes_rtl rtl = new(u_rtl_if);
+        rtl.reset();
+        aes_view = rtl;
+`else
+        automatic fw_aes_v0 v0 = new();
+        aes_view = v0;
+`endif
+        root = new("root");
+        clk_dom = new("clock", root, u_clk);
         root.clock.connect(clk_dom);
         root.start();
     end

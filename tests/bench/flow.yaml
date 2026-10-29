@@ -47,3 +47,22 @@ fragment:
   - name: bench-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-img]
+
+  # The same bench on the `rtl` view (A0 XLS RTL); FW_AES_BENCH_RTL picks it.
+  - name: bench-rtl-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl, rtl-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
+  - name: bench-rtl-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-rtl-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_RTL]
+
+  - name: bench-rtl-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-rtl-img]
