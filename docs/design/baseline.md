@@ -135,6 +135,52 @@ block straight into the datapath; and the single DOUT buffer keeps op i+1
 from starting before DOUT i is stored. A1 is op-bound in both. Same TL bus
 caveats as above (no arbitration between DMA, glue and host).
 
+## Sweep: bus speed x blocks x arch (B2-4b): `python3 tests/bench/sweep.py`
+
+Standalone-stream (`bench-v3-stream[-aN]`) and integrated pipe
+(`bench-aesdma-pipe[-aN]`) at FW_AES_BUS_PS {3500, 7000, 14000} (ps per bus
+access; clk 10 ns) x FW_AES_NB {1, 8, 64} x A0/A1/A4: 54 points, all TEST
+PASSED. Each point rebuilds the image via `dfm run -P` (about 8 s per point,
+7 min total). Full rows: docs/design/sweep-b2-4b.csv (clks, blocks/clk,
+first); script also writes logs/sweep.{csv,md}.
+
+Steady state, clks per block at NB=64 (stream / pipe, ratio), and first-block
+latency at NB=8 (clks until block 0 is in DST):
+
+| arch (clk/op) | bus ns | stream clk/blk | pipe clk/blk | stream/pipe | first stream | first pipe |
+|---|---|---|---|---|---|---|
+| A0 (4)  | 3.5 | 7.0  | 4.1  | 1.73 | 9  | 8  |
+| A0 (4)  | 7   | 12.0 | 5.7  | 2.11 | 17 | 12 |
+| A0 (4)  | 14  | 23.9 | 11.3 | 2.11 | 35 | 22 |
+| A1 (11) | 3.5 | 14.0 | 11.1 | 1.27 | 16 | 15 |
+| A1 (11) | 7   | 17.1 | 11.1 | 1.54 | 22 | 19 |
+| A1 (11) | 14  | 24.0 | 11.5 | 2.09 | 35 | 27 |
+| A4 (6)  | 3.5 | 9.0  | 6.1  | 1.49 | 11 | 10 |
+| A4 (6)  | 7   | 12.1 | 6.1  | 1.97 | 17 | 14 |
+| A4 (6)  | 14  | 23.9 | 11.3 | 2.12 | 35 | 22 |
+
+- Bus-bound limit: stream moves 16 accesses per block on the one DMA engine,
+  pipe 8. At 14 ns every arch hits it (stream ~16 x 1.4 = 22.4 + ~1.5,
+  pipe 8 x 1.4 = 11.2) and the ratio is the access count, ~2.1x; arch does
+  not matter in either config.
+- Op-bound limit: pipe runs at the op II whenever the bus allows (A0 4.1 at
+  3.5 ns, A4 6.1 and A1 11.1 at 3.5 and 7 ns). Stream never reaches the II:
+  with one DOUT buffer it adds the DOUT drain to each op (A1 14.0 = 11 + 3 at
+  3.5 ns, 17.1 = 11 + 6 at 7 ns).
+- Arch choice depends on config: at 7 ns stream cannot tell A0 from A4 (12.0
+  vs 12.1, both bus-bound), so the cheaper A4 is the right pick; pipe at
+  3.5 ns gives A0 1.49x over A4 (4.1 vs 6.1), and stream at 3.5 ns 1.29x
+  (7.0 vs 9.0). Only the integrated view exposes the op II to the system.
+- Gap is smallest where both are op-bound and the bus is fast (A1 at 3.5 ns,
+  1.27x) and largest where both are bus-bound (2.1x).
+- First-block latency: pipe is 1-13 clks earlier. In stream, from NB=8 on,
+  block 0's store competes with block 1's fetch on the one engine (14 ns:
+  27 clks at NB=1, 35 at NB=8); pipe's first barely moves with NB.
+- NB=8 vs 64: clk/blk at NB=8 is within 6% of NB=64 for stream, up to 16%
+  above it for pipe (pipeline fill and drain is a larger share of its shorter
+  runs), so the 8-block numbers above slightly understate the pipe's lead.
+- Bus width is not swept (32-bit TL bus only); same TL caveats as above.
+
 ## Cycle fidelity V3 vs A0 RTL (item 9): `dfm run vectors-run-fid`
 
 tests/unit/fw_aes_fid_tb.sv runs the `rtl` view (A0 XLS RTL) and the `v3`
