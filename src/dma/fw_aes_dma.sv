@@ -15,6 +15,13 @@ package fw_aes_dma_pkg;
         // Block-loop schedule: 0 serial; 1 overlap fetch i+1 with AES op i
         // (item 14b); 2 pipeline: op i beside (store i-1; fetch i+1) (item 14c).
         int unsigned           m_sched;
+        // Contract checks (contracts.md "Checks to add"): C1/C3/C4 env
+        // invariants that X1/X2/X3/X6 rely on. X2/X3/X6 save FFs, not
+        // clocks, so at TL they are these checks only (zero-cycle).
+        bit                    m_busy;
+        bit                    m_started;
+        bit [1:0]              m_mode;
+        int unsigned           m_contract_errs;
 
         function new(fw_aes_api aes, wb_proto_if #(32, 32) master, int unsigned sched = 0);
             m_regs    = new("regs");
@@ -34,6 +41,21 @@ package fw_aes_dma_pkg;
             dat_r = 32'h0;
             if (err) return;
             if (we) begin
+                // KEY/SRC/DST/LEN/CTRL (0x00-0x2C) not written while BUSY.
+                if (m_busy && adr <= 'h2C) begin
+                    $display("CONTRACT: write 'h%02h while BUSY", adr);
+                    m_contract_errs++;
+                end
+                if (adr == 'h2C && dat_w[0]) begin
+                    fw_aes_dma_regs__CTRL_t c = dat_w;
+                    // C3/X6: MODE fixed after the first START.
+                    if (m_started && c.MODE != m_mode) begin
+                        $display("CONTRACT: MODE changed after first START");
+                        m_contract_errs++;
+                    end
+                    m_started = 1;
+                    m_mode    = c.MODE;
+                end
                 m_regs.write_val(adr, dat_w);
                 if (adr == 'h2C && dat_w[0]) run(dat_w);
             end else begin
@@ -53,6 +75,7 @@ package fw_aes_dma_pkg;
             bit          err;
             for (int i = 0; i < 8; i++) key[255-32*i -: 32] = m_regs.read_val(4*i);
             status.BUSY = 1;
+            m_busy      = 1;
             m_regs.STATUS.update_val(status);
             m_aes.set_key(key, aes_mode_e'(ctrl.MODE));
             if (m_sched == 1)      run_overlap(ctrl, src, dst, n, status);
@@ -76,6 +99,7 @@ package fw_aes_dma_pkg;
                 m_regs.STATUS.update_val(status);
             end
             status.BUSY = 0;
+            m_busy      = 0;
             status.DONE = !status.ERROR;
             m_regs.STATUS.update_val(status);
         endtask

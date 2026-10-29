@@ -152,6 +152,29 @@ fragment:
     needs: [bench-aesdma-pipe-img]
 
   # fw-aes-dma pipe with A1/A2 timing (item 12b): the bus picks the architecture.
+  # Item 14d2: X1 at TL (-1 clk/op; contracts.md), serial and pipelined.
+  - name: bench-aesdma-x1-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_X1]
+
+  - name: bench-aesdma-x1-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-x1-img]
+
+  - name: bench-aesdma-pipe-x1-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE, FW_AES_X1]
+
+  - name: bench-aesdma-pipe-x1-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-x1-img]
+
   - name: bench-aesdma-pipe-a1-img
     uses: hdlsim.vlt.SimImage
     needs: [bench-aesdma-tb]

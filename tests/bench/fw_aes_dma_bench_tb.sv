@@ -73,6 +73,11 @@ module fw_aes_dma_bench_tb;
         dec.aes = new(v3, dec);
         `define AESDMA_VIEW "aesdma"
 `endif
+`ifdef FW_AES_X1
+        // X1 (contracts.md, C1/C4): fetched words load the state register
+        // directly (round-0 AddRoundKey folded), so the input flop goes: -1 clk/op.
+        v3.m_clks_per_op--;
+`endif
 
         pt[0] = 128'h00112233445566778899aabbccddeeff;
         for (int i = 1; i < NB; i++) pt[i] = {4{32'hA5A5_0000 + i}} ^ pt[0];
@@ -111,6 +116,7 @@ module fw_aes_dma_bench_tb;
 
         $display("BENCH: view=%s blocks=%0d clks=%0d bus accesses=%0d blocks/clk=%f",
                  `AESDMA_VIEW, NB, c0, a0, real'(NB) / real'(c0));
+        errors += dec.aes.m_contract_errs;
         if (errors == 0) $display("TEST PASSED");
         else             $display("TEST FAILED: %0d errors", errors);
         $finish;

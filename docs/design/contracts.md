@@ -79,3 +79,16 @@ X4 is not used by the AES demo (plan §7.4 lists no AES instance).
   DOUT read only after DONE; MODE unchanged after the first START.
 - SBY (request `fw-hdl-cosynth`): C1-C4 proved on the transactor / CSR side;
   pre- vs post-co-synthesis equivalence at the fw-aes boundary under C1-C4.
+
+## At TL (item 14d2)
+
+- Checks: fw_aes_dma counts `m_contract_errs` (write to 0x00-0x2C while BUSY;
+  MODE changed after the first START) and prints `CONTRACT:`; the system
+  bench adds the count to its errors. The unit test aes-dma-run runs AES-128
+  and AES-256 on one instance, so it prints two `CONTRACT: MODE changed`
+  lines (it is not under C3's "MODE fixed" invariant; not counted there).
+- X1 (define `FW_AES_X1`, bench only): V3 clks_per_op - 1.
+  bench-aesdma 76 -> 68 clks (8 blocks, -1/block); bench-aesdma-pipe 50 -> 48
+  (bus-bound: only the fill/drain op shrinks the critical path).
+- X2, X3, X6 save FFs (round-0 key copy, skid buffers, 192/256 paths), not
+  clocks: zero-cycle at TL; only the checks above model them.
