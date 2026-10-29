@@ -76,7 +76,7 @@ module fw_aes_dma_bench_tb;
 `ifdef FW_AES_X1
         // X1 (contracts.md, C1/C4): fetched words load the state register
         // directly (round-0 AddRoundKey folded), so the input flop goes: -1 clk/op.
-        v3.m_clks_per_op--;
+        v3.m_enc.clks_per_op--; v3.m_dec.clks_per_op--;
 `endif
 
         pt[0] = 128'h00112233445566778899aabbccddeeff;

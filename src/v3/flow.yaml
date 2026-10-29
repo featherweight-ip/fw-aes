@@ -1,12 +1,22 @@
-# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
-#
-# The `v3` view: stage-TLM fw_aes_api, hand-written from the A0 schedule
-# until the XLS schedule import exists.
+# The `v3` view: stage-TLM fw_aes_api, timed by the A0 schedule through
+# fw.hdl.xls.StageTLM (fw-hdl branch wpk/v3-import).
 fragment:
   tasks:
+  - name: v3-fn-api
+    uses: fw.hdl.api.Functions
+    needs: [aes-pkg]
+    with:
+      functions: [aes_pkg::encrypt, aes_pkg::decrypt]
+  - name: v3-stage-tlm
+    uses: fw.hdl.xls.StageTLM
+    needs: [v3-fn-api, a0-rtl]
+    with:
+      pkg_name: aes_stage_tlm_pkg
+      clk_if: fw_aes_clk_if
+      imports: [aes_pkg]
   - export: v3-view
     uses: std.FileSet
-    needs: [spl]
+    needs: [spl, v3-stage-tlm]
     with:
       type: systemVerilogSource
       include: [fw_aes_v3.sv]
