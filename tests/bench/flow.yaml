@@ -163,6 +163,17 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-pipe-a1-img]
 
+  - name: bench-aesdma-pipe-a6-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE, FW_AES_V3_CLKS=6]
+
+  - name: bench-aesdma-pipe-a6-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-a6-img]
+
   - name: bench-aesdma-pipe-a2-img
     uses: hdlsim.vlt.SimImage
     needs: [bench-aesdma-tb]
