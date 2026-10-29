@@ -35,6 +35,9 @@ module fw_aes_bench_tb;
     localparam string VIEW = "rtl";     // A0 XLS RTL
     fw_aes_rtl_if u_rtl_if(clk);
     fw_aes_rtl    u_rtl(u_rtl_if);
+`elsif FW_AES_BENCH_V3
+    localparam string VIEW = "v3";      // stage-TLM, clocked on the bench clock
+    fw_aes_clk_if u_v3_if(clk);
 `else
     localparam string VIEW = "v0";
 `endif
@@ -182,6 +185,9 @@ module fw_aes_bench_tb;
         automatic fw_aes_rtl_pkg::fw_aes_rtl rtl = new(u_rtl_if);
         rtl.reset();
         aes_view = rtl;
+`elsif FW_AES_BENCH_V3
+        automatic fw_aes_v3_pkg::fw_aes_v3 v3 = new(u_v3_if);
+        aes_view = v3;
 `else
         automatic fw_aes_v0 v0 = new();
         aes_view = v0;

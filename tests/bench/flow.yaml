@@ -66,3 +66,22 @@ fragment:
   - name: bench-rtl-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-rtl-img]
+
+  # The same bench on the `v3` view (stage-TLM); FW_AES_BENCH_V3 picks it.
+  - name: bench-v3-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl, v3-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
+  - name: bench-v3-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3]
+
+  - name: bench-v3-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-img]

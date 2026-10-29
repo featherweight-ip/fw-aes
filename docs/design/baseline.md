@@ -54,3 +54,17 @@ Verilator 5.052, 1 thread: 3 vectors x (encrypt + decrypt) = 6 ops at 4
 clks/op, simtime 185 ps, wall 0.001 s, 6 MB (sim_stats.json). The run is too
 short to give a rate: start-up dominates. Throughput (blocks/s, kclk/s) needs
 a long run and is item 10 (V3 vs V5).
+
+## System bench per view (item 8)
+
+The DMA bench (tests/bench, 8 blocks mem -> fw-aes -> mem through fw-wb-dma),
+picked by define on `hdlsim.vlt.SimImage`:
+
+| view | task          | clks | blocks/clk |
+|------|---------------|------|------------|
+| v0   | bench-run     | 102  | 0.078431   |
+| rtl  | bench-rtl-run | 128  | 0.062500   |
+| v3   | bench-v3-run  | 128  | 0.062500   |
+
+V3 (stage-TLM stand-in, src/v3) matches the A0 RTL cycle count at the system
+level; V0 is zero-time, so its count is only bus/DMA traffic.
