@@ -180,18 +180,33 @@ masking. `a6` (define `FW_AES_V3_CLKS=6`) was the stand-in for A4 and gives the
 same 57 as the scheduled A4. Clocks are for 8 blocks; each V3 sim runs in well
 under 1 s wall.
 
-| Arch | fold | S-boxes | key_expansion | II | latency | bench-v3 (ext. DMA, serial) | aesdma-pipe |
-|------|------|---------|---------------|----|---------|-----------------------------|-------------|
-| A0 | unrolled | 200 LUT | inline (XLS) | 1 (4 clk/op in V3) | 4 | 128 | 50 |
-| A1 | iterated | 16 LUT | precomputed | 11 | 11 | 184 | 97 |
-| A2 | column | 4 LUT | shared | 50 | 50 | 496 | 409 |
-| A3 | byte | 1 Canright | shared | 200 | 200 (161 precomputed) | 1696 | 1609 |
-| A4 | unrolled x2 | 32 Canright | precomputed | 6 | 6 | 144 | 57 |
-| A5 | iterated, masked d=1 | 16 Canright-DOM | (stand-in) | 21 | 21 | 264 | - |
+| Arch | fold | S-boxes | key_expansion | II | latency | bench-v3 (ext. DMA, serial) | aesdma-pipe | ECP5 LUT4 / FF (V5 enc) |
+|------|------|---------|---------------|----|---------|-----------------------------|-------------|-------------------------|
+| A0 | unrolled | 200 LUT | inline (XLS) | 1 (4 clk/op in V3) | 4 | 128 | 50 | 106170 / 903 (XLS, AES-128+256) |
+| A1 | iterated | 16 LUT | precomputed | 11 | 11 | 184 | 97 | 24241 / 421 (~6.5k LUT4 excl. keyexp) |
+| A2 | column | 4 LUT | shared | 50 | 50 | 496 | 409 | 6604 / 705 |
+| A3 | byte | 1 Canright | shared | 200 | 200 (161 precomputed) | 1696 | 1609 | 6106 / 763 |
+| A4 | unrolled x2 | 32 Canright | precomputed | 6 | 6 | 144 | 57 | 28643 / 420 (~10.9k LUT4 excl. keyexp) |
+| A5 | iterated, masked d=1 | 16 Canright-DOM | (stand-in) | 21 | 21 | 264 | - | - |
 
 With `key_expansion: shared` A1 would be 14 enc / 20 dec and A4 8 / 10; A2
 precomputed would be 41. Per-arch schedule (latency, II, ResMII, S-box binding):
 rundir/org.fwip.aes.v3-a<N>-sched/{schedule.json,aes_pkg__*.A<N>.sched.txt}.
+
+Area column (item 13c): `synth.yosys.Synth` ecp5 (`dfm run v5-a<N>-synth-ecp5`,
+rundir/org.fwip.aes.v5-a<N>-synth-ecp5/stat.json) of the encrypt V5 from
+`zuspec.synth.ArchLower` (zuspec-synth wpk/arch-sched 0003468): a folded
+datapath built from the ArchSched schedule (step FSM, `sbox_count` S-box
+instances, rerolled step logic, left-edge registers). `vectors-run-v5-a<N>`
+pass FIPS-197 C.1 + App. B at 11/50/200/6 clk/op, the same as V3. Caveats:
+- AES-128 only (A0 includes AES-256 and key_width muxing): not like-for-like.
+- A1/A4 include about 17.8k LUT4 of combinational key expansion (40 S-boxes),
+  not a sequential set_key expander; "excl. keyexp" is a plain subtraction of a
+  separate keyexp synth.
+- `canright` is not modelled: A3/A4 use the same LUT S-box ROM as A1/A2.
+- No V4 class and no V3<->V4 / V4<->V5 link checks for A1-A4 (a Python cycle model
+  stands in, checked against the XLS IR in zuspec-synth tests); encrypt only.
+- No nextpnr timing.
 
 Tasks: `bench-v3-run`, `bench-v3-a{1,2,3,4,5}-run`, `bench-aesdma-pipe-run`,
 `bench-aesdma-pipe-a{1,2,3,4,6}-run` (tests/bench/flow.yaml).

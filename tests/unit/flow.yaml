@@ -433,3 +433,75 @@ fragment:
   - name: scale-run-v3-n16k16
     uses: hdlsim.vlt.SimRun
     needs: [scale-img-v3-n16k16]
+
+  # FIPS-197 AES-128 vectors on the A1 V5 encrypt (src/v5) + XLS decrypt.
+  - name: vectors-v5-a1-tb
+    uses: std.FileSet
+    needs: [rtl-v5-a1-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v5_tb.sv]
+
+  - name: vectors-img-v5-a1
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v5-a1-tb]
+    with:
+      top: [fw_aes_vectors_v5_tb]
+
+  - name: vectors-run-v5-a1
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v5-a1]
+
+  # FIPS-197 AES-128 vectors on the A2 V5 encrypt (src/v5) + XLS decrypt.
+  - name: vectors-v5-a2-tb
+    uses: std.FileSet
+    needs: [rtl-v5-a2-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v5_tb.sv]
+
+  - name: vectors-img-v5-a2
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v5-a2-tb]
+    with:
+      top: [fw_aes_vectors_v5_tb]
+
+  - name: vectors-run-v5-a2
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v5-a2]
+
+  # FIPS-197 AES-128 vectors on the A3 V5 encrypt (src/v5) + XLS decrypt.
+  - name: vectors-v5-a3-tb
+    uses: std.FileSet
+    needs: [rtl-v5-a3-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v5_tb.sv]
+
+  - name: vectors-img-v5-a3
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v5-a3-tb]
+    with:
+      top: [fw_aes_vectors_v5_tb]
+
+  - name: vectors-run-v5-a3
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v5-a3]
+
+  # FIPS-197 AES-128 vectors on the A4 V5 encrypt (src/v5) + XLS decrypt.
+  - name: vectors-v5-a4-tb
+    uses: std.FileSet
+    needs: [rtl-v5-a4-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v5_tb.sv]
+
+  - name: vectors-img-v5-a4
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v5-a4-tb]
+    with:
+      top: [fw_aes_vectors_v5_tb]
+
+  - name: vectors-run-v5-a4
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v5-a4]

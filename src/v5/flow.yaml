@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# V5 of A1-A4 encrypt: folded datapaths lowered from the arch schedules
+# (zuspec.synth.ArchLower over the same specs/IR as src/v3's ArchSched).
+# AES-128 only (specialize key_width=0). Decrypt stays the XLS Verilog.
+# Per arch: v5-a<N>-enc (encrypt only, for synthesis), v5-a<N> (+ XLS
+# decrypt passed through), rtl-v5-a<N>-view (src/rtl wrapper over it) and
+# v5-a<N>-synth-ecp5 (Yosys synth_lattice, encrypt only).
+fragment:
+  tasks:
+  - name: v5-a1-enc
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A1
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+  - name: v5-a1
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A1
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+      passthrough: [aes_pkg__decrypt]
+  - name: rtl-v5-a1-view
+    uses: std.FileSet
+    needs: [spl, v5-a1]
+    with:
+      type: systemVerilogSource
+      base: ../rtl
+      include: [fw_aes_rtl.sv]
+  - name: v5-a1-synth-ecp5
+    desc: Yosys synth_lattice (ECP5) of the A1 V5 encrypt; stat.json
+    uses: synth.yosys.Synth
+    needs: [v5-a1-enc]
+    with:
+      target: ecp5
+      top: aes_pkg__encrypt
+      formats: [json]
+  - name: v5-a2-enc
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A2
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+  - name: v5-a2
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A2
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+      passthrough: [aes_pkg__decrypt]
+  - name: rtl-v5-a2-view
+    uses: std.FileSet
+    needs: [spl, v5-a2]
+    with:
+      type: systemVerilogSource
+      base: ../rtl
+      include: [fw_aes_rtl.sv]
+  - name: v5-a2-synth-ecp5
+    desc: Yosys synth_lattice (ECP5) of the A2 V5 encrypt; stat.json
+    uses: synth.yosys.Synth
+    needs: [v5-a2-enc]
+    with:
+      target: ecp5
+      top: aes_pkg__encrypt
+      formats: [json]
+  - name: v5-a3-enc
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A3
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+  - name: v5-a3
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A3
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+      passthrough: [aes_pkg__decrypt]
+  - name: rtl-v5-a3-view
+    uses: std.FileSet
+    needs: [spl, v5-a3]
+    with:
+      type: systemVerilogSource
+      base: ../rtl
+      include: [fw_aes_rtl.sv]
+  - name: v5-a3-synth-ecp5
+    desc: Yosys synth_lattice (ECP5) of the A3 V5 encrypt; stat.json
+    uses: synth.yosys.Synth
+    needs: [v5-a3-enc]
+    with:
+      target: ecp5
+      top: aes_pkg__encrypt
+      formats: [json]
+  - name: v5-a4-enc
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A4
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+  - name: v5-a4
+    uses: zuspec.synth.ArchLower
+    needs: [a0-rtl, arch-specs]
+    with:
+      arch: A4
+      functions: [aes_pkg::encrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+      passthrough: [aes_pkg__decrypt]
+  - name: rtl-v5-a4-view
+    uses: std.FileSet
+    needs: [spl, v5-a4]
+    with:
+      type: systemVerilogSource
+      base: ../rtl
+      include: [fw_aes_rtl.sv]
+  - name: v5-a4-synth-ecp5
+    desc: Yosys synth_lattice (ECP5) of the A4 V5 encrypt; stat.json
+    uses: synth.yosys.Synth
+    needs: [v5-a4-enc]
+    with:
+      target: ecp5
+      top: aes_pkg__encrypt
+      formats: [json]
