@@ -81,6 +81,35 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-fid]
 
+  # Sim speed: rtl and v3 views, 400000 ops each (item 10).
+  - name: vectors-speed-tb
+    uses: std.FileSet
+    needs: [rtl-view, v3-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_speed_tb.sv]
+
+  - name: vectors-img-speed-rtl
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-speed-tb]
+    with:
+      top: [fw_aes_speed_tb]
+
+  - name: vectors-run-speed-rtl
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-speed-rtl]
+
+  - name: vectors-img-speed-v3
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-speed-tb]
+    with:
+      top: [fw_aes_speed_tb]
+      defines: [FW_AES_SPEED_V3]
+
+  - name: vectors-run-speed-v3
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-speed-v3]
+
   # CSR access test:the generated fw-hdl register model, by address.
   - name: csr-tb
     uses: std.FileSet

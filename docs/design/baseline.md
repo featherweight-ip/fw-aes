@@ -82,3 +82,27 @@ lifts SVUnit tests over the `fw.hdl.api.Functions` function API, and
 `formal.sby.*`) do not take a clocked class view such as V3, and the A0 RTL
 is too large for full proofs (encrypt-only IR equivalence is inconclusive at
 600 s, above). Revisit with the generated V3 from request fw-hdl-v3-import.
+
+## Sim speed V3 vs RTL (item 10): `dfm run vectors-run-speed-{rtl,v3}`
+
+`tests/unit/fw_aes_speed_tb.sv`: one view, 400000 random ops (200000
+enc+dec pairs, new key each pair, AES-128/256 alternating), 4 clks/op on both
+views, 1600000 clks. Walltime from the Verilator report in sim.log (whole run,
+testbench included). One run each, 1 thread; noise not measured.
+
+| Verilator                     | view | walltime | blocks/s | kclk/s | vs rtl 5.052 |
+|-------------------------------|------|---------:|---------:|-------:|-------------:|
+| 5.052 (packages/verilator)    | rtl  | 3.824 s  | 104.6 k  | 418    | 1.0x |
+| 5.052                         | v3   | 1.362 s  | 293.7 k  | 1175   | 2.8x |
+| efficient-waits (5.053 devel, be33a0f6c..381356b19) | rtl | 3.726 s | 107.4 k | 429 | 1.0x |
+| efficient-waits               | v3   | 0.814 s  | 491.4 k  | 1966   | 4.7x |
+
+- There is no V5 view yet (Ph3 lowering); the A0 XLS RTL (`rtl`) stands in
+  for V5. The claim "V3 sims faster than RTL" holds: 2.8x on stock 5.052,
+  4.7x on the efficient-waits branch. The branch helps the class view (1.67x)
+  and not the RTL view (1.03x), as expected: its gain is in timing waits.
+- Branch build: the efficient-waits work packet's
+  `work/verilator-efficient-waits/bin` put first on PATH, `dfm run -f`; then
+  rerun `-f` with stock 5.052 so rundir/ holds stock images.
+- Go/no-go: go for a speed claim of V3 over RTL; re-measure against a real V5
+  when Ph3 makes one, and with several runs for spread.
