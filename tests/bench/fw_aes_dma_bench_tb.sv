@@ -4,6 +4,14 @@
 // fw-aes-dma's own master fetches, encrypts (v3 view) and stores every block.
 //
 //   host, aesdma master --wb_proto_if--> dec: 0x0xxx_xxxx mem, 0x1xxx_xxxx aesdma
+//
+// Sweep knobs as fw_aes_bench_tb: FW_AES_NB blocks, FW_AES_BUS_PS ps per access.
+`ifndef FW_AES_NB
+`define FW_AES_NB 8
+`endif
+`ifndef FW_AES_BUS_PS
+`define FW_AES_BUS_PS 7000
+`endif
 module fw_aes_dma_bench_tb;
     import fw_proto_wb_pkg::*;
     import fw_aes_api_pkg::*;
@@ -16,10 +24,11 @@ module fw_aes_dma_bench_tb;
     localparam addr_t AES = 32'h1000_0000;
     localparam addr_t SRC = 32'h0000_1000;
     localparam addr_t DST = 32'h0000_2000;
-    localparam int    NB  = 8;                  // blocks
+    localparam int    NB  = `FW_AES_NB;         // blocks
     localparam key_t  KEY = {128'h000102030405060708090a0b0c0d0e0f, 128'h0};
 
     int unsigned clks = 0;
+    int unsigned first_clk = 0;     // clks when block 0's last word lands in DST
     logic clk = 1'b0;
     always #5ns clk = ~clk;
     always @(posedge clk) clks++;
@@ -34,8 +43,9 @@ module fw_aes_dma_bench_tb;
 
         virtual task access(input [31:0] adr, input [31:0] dat_w, input [3:0] sel,
                             input we, output [31:0] dat_r, output err);
-            #7ns;
+            #(`FW_AES_BUS_PS * 1ps);
             n_acc++;
+            if (we && adr == DST + 'hC && first_clk == 0) first_clk = clks;
             if (adr[31:28] == AES[31:28]) aes.access({4'b0, adr[27:0]}, dat_w, sel, we, dat_r, err);
             else begin
                 if (we) mem[adr] = dat_w;
@@ -59,7 +69,7 @@ module fw_aes_dma_bench_tb;
         fw_aes_v3  v3    = new(u_v3_if);
         fw_aes_v0  ref_m = new();
         block_t    pt [NB], exp [NB], got;
-        int unsigned c0, a0;
+        int unsigned c0, a0, t0;
         bit        err;
         data_t     w;
 
@@ -91,6 +101,7 @@ module fw_aes_dma_bench_tb;
         // Timed region: descriptor, START, STATUS read (as the baseline times
         // its per-block DMA programming + CTRL writes).
         c0 = clks;
+        t0 = clks;
         a0 = dec.n_acc;
         wr(dec, AES + 'h20, SRC);
         wr(dec, AES + 'h24, DST);
@@ -114,8 +125,8 @@ module fw_aes_dma_bench_tb;
             $display("FAIL: reference C.1 mismatch"); errors++;
         end
 
-        $display("BENCH: view=%s blocks=%0d clks=%0d bus accesses=%0d blocks/clk=%f",
-                 `AESDMA_VIEW, NB, c0, a0, real'(NB) / real'(c0));
+        $display("BENCH: view=%s blocks=%0d clks=%0d bus accesses=%0d blocks/clk=%f first=%0d bus_ps=%0d",
+                 `AESDMA_VIEW, NB, c0, a0, real'(NB) / real'(c0), first_clk - t0, `FW_AES_BUS_PS);
         errors += dec.aes.m_contract_errs;
         if (errors == 0) $display("TEST PASSED");
         else             $display("TEST FAILED: %0d errors", errors);

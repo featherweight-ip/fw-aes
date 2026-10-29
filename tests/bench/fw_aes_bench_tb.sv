@@ -7,6 +7,15 @@
 //
 //   host --regs--> dma.rf.host
 //   host, dma.de.mif0/mif1 --wb_proto_if--> dec: 0x0xxx_xxxx mem, 0x1xxx_xxxx aes
+//
+// Sweep knobs (defines; defaults are the baseline): FW_AES_NB blocks (<= 64),
+// FW_AES_BUS_PS bus access time in ps per 32-bit access (7000).
+`ifndef FW_AES_NB
+`define FW_AES_NB 8
+`endif
+`ifndef FW_AES_BUS_PS
+`define FW_AES_BUS_PS 7000
+`endif
 module fw_aes_bench_tb;
     import fw_hdl_pkg::*;
     import fw_std_pkg::*;
@@ -22,7 +31,7 @@ module fw_aes_bench_tb;
     localparam addr_t AES = 32'h1000_0000;
     localparam addr_t SRC = 32'h0000_1000;
     localparam addr_t DST = 32'h0000_2000;
-    localparam int    NB  = 8;                  // blocks
+    localparam int    NB  = `FW_AES_NB;         // blocks
     localparam key_t  KEY = {128'h000102030405060708090a0b0c0d0e0f, 128'h0};
 
     // DMA channel registers (0x20 base, 0x20 stride per channel); CSR DONE is bit 11.
@@ -34,6 +43,7 @@ module fw_aes_bench_tb;
     localparam addr_t DIN_WIN = AES + 'h1000, DOUT_WIN = AES + 'h2000;
 
     int unsigned clks = 0;
+    int unsigned first_clk = 0;     // clks when block 0's last word lands in DST
     logic clk = 1'b0;
     logic rst = 1'b0;
 
@@ -62,7 +72,8 @@ module fw_aes_bench_tb;
 
         virtual task m_access(input [31:0] adr, input [31:0] dat_w, input [3:0] sel,
                               input we, output [31:0] dat_r, output err);
-            #7ns;
+            #(`FW_AES_BUS_PS * 1ps);
+            if (we && adr == DST + 'hC && first_clk == 0) first_clk = clks;
             if (adr[31:12] == DIN_WIN[31:12])       adr = AES + 'h20 + (adr & 'hC);
             else if (adr[31:12] == DOUT_WIN[31:12]) adr = AES + 'h30 + (adr & 'hC);
             if (adr == AES + 'h40 && we && dat_w[0]) n_started++;
@@ -136,7 +147,7 @@ module fw_aes_bench_tb;
             wb_proto_if #(32, 32) b = bus.get_if();
             fw_aes_v0 ref_m = new();
             block_t pt [NB], exp [NB], got;
-            int unsigned c0;
+            int unsigned c0, t0;
             bit err;
             data_t w;
             errors = 0;
@@ -152,6 +163,7 @@ module fw_aes_bench_tb;
             for (int j = 0; j < 8; j++) wr(b, AES + 4*j, KEY[255-32*j -: 32]);
 
             c0 = clks;
+            t0 = clks;
 `ifdef FW_AES_BENCH_STREAM
             // Both channels once, HW handshake (MODE), one 4-word chunk per block;
             // hs_glue paces them. ch1 last, so its DONE is the end of the run.
@@ -180,8 +192,8 @@ module fw_aes_bench_tb;
                 $display("FAIL: reference C.1 mismatch"); errors++;
             end
 
-            $display("BENCH: view=%s blocks=%0d clks=%0d blocks/clk=%f",
-                     VIEW, NB, c0, real'(NB) / real'(c0));
+            $display("BENCH: view=%s blocks=%0d clks=%0d blocks/clk=%f first=%0d bus_ps=%0d",
+                     VIEW, NB, c0, real'(NB) / real'(c0), first_clk - t0, `FW_AES_BUS_PS);
             if (errors == 0) $display("TEST PASSED");
             else             $display("TEST FAILED: %0d errors", errors);
             $finish;
