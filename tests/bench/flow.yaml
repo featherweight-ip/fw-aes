@@ -1,0 +1,49 @@
+fragment:
+  # System bench (plan §7.3): host + fw-wb-dma (class model) + memory + fw-aes,
+  # all transaction level. fw-wb-dma sources come from deps/fw-wb-dma, a local
+  # symlink to a clone (gitignored; see Q1).
+  tasks:
+  - name: dma-rdl-src
+    uses: std.FileSet
+    with:
+      base: ../../deps/fw-wb-dma/src/rdl
+      type: systemRDLSource
+      include: [wb_dma_ch_regs.rdl, wb_dma.rdl]
+
+  - name: dma-reg-model
+    uses: rdl.Export
+    needs: [dma-rdl-src]
+    with:
+      format: fw-hdl
+      top: wb_dma_regs
+      filename: wb_dma_reg_pkg.sv
+      args: ["-P", "NUM_CH=4"]
+      options:
+        package-name: wb_dma_reg_pkg
+        type-style: lexical
+
+  - name: dma-spl
+    uses: std.FileSet
+    needs: [fw-hdl.hdl.sv-src, dma-reg-model, fw.proto.wb.files, fw.proto.gpio.files]
+    with:
+      base: ../../deps/fw-wb-dma/src/spl
+      type: systemVerilogSource
+      include: [wb_dma_spl_pkg.sv]
+      incdirs: ["."]
+
+  - name: bench-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
+  - name: bench-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-tb]
+    with:
+      top: [fw_aes_bench_tb]
+
+  - name: bench-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-img]

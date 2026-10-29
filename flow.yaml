@@ -37,6 +37,7 @@ package:
   - fw.proto.wb
   - fw-hdl
   - rdl
+  - deps/fw-proto-gpio/flow.yaml   # fw.proto.gpio (fw-wb-dma spl needs it; deps/ is a local symlink, Q1)
 
   fragments:
   - src/rdl/flow.yaml
@@ -44,4 +45,5 @@ package:
   - src/arch/flow.yaml
   - src/ref/flow.yaml
   - tests/unit/flow.yaml
+  - tests/bench/flow.yaml
   - tests/uvm/flow.yaml

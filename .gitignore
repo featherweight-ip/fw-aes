@@ -221,3 +221,4 @@ __marimo__/
 /packages
 logs/
 rundir/
+/deps
