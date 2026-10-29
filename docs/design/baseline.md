@@ -68,3 +68,17 @@ picked by define on `hdlsim.vlt.SimImage`:
 
 V3 (stage-TLM stand-in, src/v3) matches the A0 RTL cycle count at the system
 level; V0 is zero-time, so its count is only bus/DMA traffic.
+
+## Cycle fidelity V3 vs A0 RTL (item 9): `dfm run vectors-run-fid`
+
+tests/unit/fw_aes_fid_tb.sv runs the `rtl` view (A0 XLS RTL) and the `v3`
+view on one clock: 16 random keys (AES-128/256 alternating) and blocks, each
+encrypted and decrypted on both views. Per op it checks equal results and
+equal clocks. Result: TEST PASSED, 32 ops, 128 clks on each view (4 per op).
+With the bench (128 clks each, above) this is the sim half of item 9.
+
+Formal half: not done. The formal flows here (`fw.hdl.formal.Prove`, which
+lifts SVUnit tests over the `fw.hdl.api.Functions` function API, and
+`formal.sby.*`) do not take a clocked class view such as V3, and the A0 RTL
+is too large for full proofs (encrypt-only IR equivalence is inconclusive at
+600 s, above). Revisit with the generated V3 from request fw-hdl-v3-import.

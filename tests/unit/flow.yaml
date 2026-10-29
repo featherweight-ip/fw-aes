@@ -63,6 +63,24 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v3]
 
+  # Cycle fidelity: v3 against rtl, same ops, equal clocks per op (item 9).
+  - name: vectors-fid-tb
+    uses: std.FileSet
+    needs: [rtl-view, v3-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_fid_tb.sv]
+
+  - name: vectors-img-fid
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-fid-tb]
+    with:
+      top: [fw_aes_fid_tb]
+
+  - name: vectors-run-fid
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-fid]
+
   # CSR access test:the generated fw-hdl register model, by address.
   - name: csr-tb
     uses: std.FileSet
