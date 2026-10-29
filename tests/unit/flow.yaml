@@ -45,6 +45,24 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-rtl]
 
+  # The same vectors on the `rtl` view with encrypt from our lowering (V5, src/ll).
+  - name: vectors-ll-tb
+    uses: std.FileSet
+    needs: [rtl-ll-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_rtl_tb.sv]
+
+  - name: vectors-img-ll
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-ll-tb]
+    with:
+      top: [fw_aes_vectors_rtl_tb]
+
+  - name: vectors-run-ll
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-ll]
+
   # The same vectors on the `v3` view (stage-TLM from the A0 schedule).
   - name: vectors-v3-tb
     uses: std.FileSet

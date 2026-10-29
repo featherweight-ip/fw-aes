@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# Our own lowering of the A0 schedule (synth.xls.Lower): V4 (stage-annotated
+# cycle model) and V5 (synthesizable SV) of aes_pkg::encrypt, with the link
+# checks V3 <-> V4 and V4 <-> V5. Decrypt stays the XLS Verilog.
+fragment:
+  tasks:
+  - name: a0-ll
+    desc: A0 encrypt lowered from the XLS schedule (V4 + V5); decrypt passed through from a0-rtl
+    uses: synth.xls.Lower
+    needs: [a0-rtl]
+    with:
+      modules: [aes_pkg__encrypt]
+
+  - name: rtl-ll-view
+    uses: std.FileSet
+    needs: [spl, a0-ll]
+    with:
+      type: systemVerilogSource
+      base: ../rtl
+      include: [fw_aes_rtl.sv]
+
+  # ---- link checks ----
+  - name: link-v4-v5
+    desc: V4 <-> V5, per-stage combinational equivalence (Yosys miter + SAT)
+    uses: synth.xls.LinkV4V5
+    needs: [a0-ll]
+
+  - name: link-v3-v4
+    desc: V3 (StageTLM encrypt_stage_tlm) <-> V4 (aes_pkg__encrypt_v4), per-op result and clocks
+    uses: synth.xls.LinkV3V4
+    needs: [aes-pkg, v3-stage-tlm, a0-ll]
+    with:
+      pairs: [encrypt_stage_tlm=aes_pkg__encrypt]
+      ops: 500
+
+  # ---- ECP5 synthesis of our V5 encrypt (vs XLS's a0-synth-ecp5) ----
+  - name: a0-ll-synth-ecp5
+    desc: Yosys synth_lattice (ECP5) of the lowered V5 encrypt; stat.json
+    uses: synth.yosys.Synth
+    needs: [a0-ll]
+    with:
+      target: ecp5
+      top: aes_pkg__encrypt
+      formats: [json]

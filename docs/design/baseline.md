@@ -204,3 +204,34 @@ A1 at 11 clk/op is op-bound (97 ~ 8 x 11 + fill), and so are A2 (409) and
 A3 (1609). So with the integrated DMA
 the bus cycle per block, not the datapath, sets the useful II: architectures
 with II <= ~6 give about the same throughput, and the smallest of them wins.
+
+## Our lowering V3 -> V4 -> V5 vs XLS codegen (item 13b)
+
+`a0-ll` (src/ll/flow.yaml, `synth.xls.Lower`, dv-flow-libsynth wpk/lower 1a4dcdf)
+reads the A0 encrypt schedule and scheduled IR that `a0-rtl` writes, and emits our
+own V4 (class `aes_pkg__encrypt_v4`, named stage registers, `tick()`/`op()`) and V5
+(SV: top + one combinational module per stage). Decrypt stays XLS Verilog.
+Same structure as XLS: 2 stages (1612 + 1533 nodes), 29 boundary registers
+(386 bits, XLS's `p0_*`), 386 input + 128 output flop bits, latency 3.
+
+| check | task | result |
+|---|---|---|
+| FIPS-197 vectors on our V5 | `vectors-run-ll` | TEST PASSED, 4 clks/op (= XLS `vectors-run-rtl`) |
+| V3 <-> V4 | `link-v3-v4` | equivalent: 500 random ops, 0 mismatches, 4 clks/op both (simulation) |
+| V4 <-> V5 | `link-v4-v5` | equivalent: per-stage Yosys miter + SAT, ~13 s/stage, 5 GB |
+
+| encrypt, ECP5 `synth_lattice` | LUT4 | PFUMX | L6MUX21 | TRELLIS_FF | Yosys time | peak mem |
+|---|---|---|---|---|---|---|
+| XLS codegen (`a0-synth-ecp5`) | 106170 | 40740 | 18289 | 903 | 320 s | 15.0 GB |
+| ours (`a0-ll-synth-ecp5`) | 111073 (+4.6 %) | 43925 | 20940 | 999 | 162 s | 6.6 GB |
+
+Reading:
+- Our V5 is cycle-equal to XLS and passes the vectors; its QoR is within 5 % LUT4.
+  Both are far over an LFE5U-85F (84k LUT4), as in item 6b.
+- 96 extra FFs (999 vs 903 = 386 + 386 + 128 + 3 valid) and +4.9k LUT4 are not
+  analyzed. Candidates: XLS block-level codegen passes we skip, and our S-box as
+  `L[idx*8 +: 8]` on a 2048-bit constant vs XLS's unpacked array. Yosys's SV
+  reader rejects our V5, so synthesis goes through sv2v (also a candidate).
+- The V4 <-> V5 proof shares per-node expression strings between V4 and V5, so it
+  checks registers, stage split and port packing, not each op's lowering; op
+  semantics are covered by V3 <-> V4 (random sim) and the vectors.
