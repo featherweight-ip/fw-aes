@@ -106,6 +106,35 @@ port, not more scheduling. Unit test (aes-dma-pipe-run): 65 accesses, AES
 clks 36 (op on block 2 runs beside the failing store of block 1);
 COUNT/ERROR/DONE unchanged.
 
+## Best-case standalone: HW-handshake streaming (B2-3b)
+
+`bench-v3-run` charges standalone for per-block CSR work (two channels
+programmed and polled per block). Define `FW_AES_BENCH_STREAM` on the same
+bench (tests/bench/fw_aes_bench_tb.sv) gives it its best case with the stock
+fw-wb-dma model and fw-aes unchanged: ch0 (mem -> DIN) and ch1 (DOUT -> mem)
+are programmed once in HW-handshake mode (CSR.MODE, CHK_SZ=4, TOT_SZ=32), and
+bench glue (`hs_glue`, standing in for dma_req/dma_ack pins on fw-aes) paces
+them: ch0 fetches block i+1 as soon as START i has latched DIN (overlapping op
+i), START i+1 waits for ch1 to drain DOUT i (one DOUT buffer), START is a bus
+write to CTRL. The decoder folds two stream apertures (AES+0x1000, +0x2000)
+onto DIN0-3/DOUT0-3, since the model has no address masks. The host waits
+only for ch1 DONE.
+
+| arch (clk/op) | per-block CSR (`bench-v3[-aN]-run`) | stream (`bench-v3-stream[-aN]-run`) | fw-aes-dma pipe |
+|---------------|------|------|------|
+| A0 (4)        | 128  | 100  | 50   |
+| A1 (11)       | 184  | 142  | 97   |
+| A4 (6)        | 144  | 102  | 57   |
+
+Streaming removes 28-42 clks of CSR overhead (1.28-1.41x); integrated pipe is
+still 2.0x (A0), 1.46x (A1), 1.79x (A4) faster. The remaining gap is
+structural, not CSR: the external DMA moves every word as a read plus a write
+on the one engine (16 accesses x 7 ns = 11.2 clks per block, so A0 and A4
+are DMA-bound and differ by only 2 clks), where fw-aes-dma does 8 accesses per
+block straight into the datapath; and the single DOUT buffer keeps op i+1
+from starting before DOUT i is stored. A1 is op-bound in both. Same TL bus
+caveats as above (no arbitration between DMA, glue and host).
+
 ## Cycle fidelity V3 vs A0 RTL (item 9): `dfm run vectors-run-fid`
 
 tests/unit/fw_aes_fid_tb.sv runs the `rtl` view (A0 XLS RTL) and the `v3`

@@ -305,6 +305,40 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-v3-a4-img]
 
+  # B2-3b: best-case standalone, both channels once in HW-handshake mode.
+  - name: bench-v3-stream-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3, FW_AES_BENCH_STREAM]
+
+  - name: bench-v3-stream-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-stream-img]
+
+  - name: bench-v3-stream-a1-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-a1-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3, FW_AES_BENCH_STREAM]
+
+  - name: bench-v3-stream-a1-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-stream-a1-img]
+
+  - name: bench-v3-stream-a4-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-a4-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3, FW_AES_BENCH_STREAM]
+
+  - name: bench-v3-stream-a4-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-stream-a4-img]
+
   - name: bench-aesdma-a4-tb
     uses: std.FileSet
     needs: [aes-dma-tl, v3-a4-view]
