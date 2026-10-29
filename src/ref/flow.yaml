@@ -1,5 +1,11 @@
 # yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
 #
-# The reference: the A0 XLS RTL and the FIPS-197 vectors.
+# The reference: aes_pkg (the SV port of XLS's AES, copied from fw-hdl
+# examples/xls/aes) and, later, the A0 XLS RTL.
 fragment:
-  tasks: []
+  tasks:
+  - name: aes-pkg
+    uses: std.FileSet
+    with:
+      type: systemVerilogSource
+      include: [aes_pkg.sv]

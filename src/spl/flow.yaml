@@ -1,5 +1,15 @@
 # yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
 #
-# The fw-hdl class model views (V0, V3).
+# The fw-hdl class model views (V0, V3). `needs` order is compile order.
 fragment:
-  tasks: []
+  tasks:
+  - name: fw-aes-api-pkg
+    uses: std.FileSet
+    needs: [aes-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_api_pkg.sv]
+
+  - export: spl
+    uses: std.FileSet
+    needs: [fw-aes-api-pkg]

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# Unit tests: FIPS-197 known answers through the fw_aes_api.
+fragment:
+  tasks:
+  - name: vectors-tb
+    uses: std.FileSet
+    needs: [spl]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_tb.sv]
+
+  - name: vectors-img-v0
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-tb]
+    with:
+      top: [fw_aes_vectors_tb]
+
+  - name: vectors-run-v0
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v0]
