@@ -109,6 +109,18 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-v3-a2-img]
 
+  # v3 with A5 (masked S-box, 21 clk/op) timing (item 15a, src/arch/a5.yaml).
+  - name: bench-v3-a5-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3, FW_AES_V3_CLKS=21]
+
+  - name: bench-v3-a5-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-a5-img]
+
   # fw-aes-dma (item 14a3, Q4 variant): the same 8 blocks, no external DMA.
   - name: bench-aesdma-tb
     uses: std.FileSet

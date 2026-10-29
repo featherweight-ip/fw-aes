@@ -183,6 +183,7 @@ blocks; each V3 sim runs in well under 1 s wall.
 | A2 | column | 4 LUT | 44 | 44 | 448 | 361 |
 | A3 | byte | 1 Canright | 160 | 160 | - | - |
 | A4 | unrolled x2 | 32 Canright | 6 | 6 | - | 57 (stand-in `a6`) |
+| A5 | iterated, masked d=1 | 16 Canright-DOM | 21 | 21 | 264 | - |
 
 Tasks: `bench-v3-run`, `bench-v3-a{1,2}-run`, `bench-aesdma-pipe-run`,
 `bench-aesdma-pipe-a{1,2,6}-run` (tests/bench/flow.yaml).

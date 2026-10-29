@@ -1,0 +1,13 @@
+# A5: A1's iterated round with first-order masked S-boxes (stretch, PLAN Ph5).
+# DOM-indep Canright S-box: 2 register stages per S-box (glitch barrier), so a
+# round takes 2 clks; key schedule stays unmasked here (key is a CSR, C3).
+arch: A5
+algorithm: aes_pkg::encrypt
+fold: iterated
+sbox_count: 16
+sbox_kind: canright_masked
+mask_order: 1                   # shares per secret value = mask_order + 1
+rand_bits_per_sbox: 18          # fresh randomness per S-box per evaluation (DOM)
+ii: 21
+latency: 21                     # 1 load/mask + 10 rounds x 2 clks
+target: ecp5
