@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# fw-aes-dma (item 14a): fw-aes with its own Wishbone master (Q4 variant).
+fragment:
+  tasks:
+  - export: aes-dma-tl
+    uses: std.FileSet
+    needs: [spl, fw-hdl.hdl.sv-src, fw.proto.wb.files, aes-dma-reg-model]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma.sv]

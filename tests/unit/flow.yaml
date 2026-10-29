@@ -146,6 +146,24 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [aes-dma-csr-img]
 
+  # fw-aes-dma TL class: CSR target + own WB master, v3 view (item 14a2).
+  - name: aes-dma-tb
+    uses: std.FileSet
+    needs: [aes-dma-tl, v3-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_tb.sv]
+
+  - name: aes-dma-img
+    uses: hdlsim.vlt.SimImage
+    needs: [aes-dma-tb]
+    with:
+      top: [fw_aes_dma_tb]
+
+  - name: aes-dma-run
+    uses: hdlsim.vlt.SimRun
+    needs: [aes-dma-img]
+
   # fw-aes driven by bus accesses through its Wishbone target (V0).
   - name: wb-tb
     uses: std.FileSet

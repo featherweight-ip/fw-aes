@@ -46,6 +46,7 @@ package:
   - src/ref/flow.yaml
   - src/rtl/flow.yaml
   - src/v3/flow.yaml
+  - src/dma/flow.yaml
   - tests/unit/flow.yaml
   - tests/bench/flow.yaml
   - tests/uvm/flow.yaml
