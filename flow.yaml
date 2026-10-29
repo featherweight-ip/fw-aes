@@ -1,0 +1,45 @@
+# dv-flow (dfm) project file for fw-aes.
+#
+# Views (plan §7): `v0` (the zero-time AES API model), `rtl` (the A0 XLS
+# RTL) and `v3` (stage-TLM classes from the XLS schedule).
+package:
+  name: org.fwip.aes
+
+  # The DV archetype (dv-flow-libproject): the standard verbs (tests, smoke,
+  # lint-rtl, tests-info, --sim, --build).
+  uses: project.dv.uvm
+  package-map: "${{ env.IVPM_PACKAGES }}/dv-flow-package-map.yaml"
+
+  with:
+    images:
+      type: list
+      value: [v0]
+      values: [v0, rtl, v3]
+      cli: true
+      desc: Views the universal tests run on (plan §7)
+    view_tb:
+      type: map
+      value:
+        v0: []
+        rtl: []
+        v3: []
+    view_top:
+      type: map
+      value:
+        v0: []
+        rtl: []
+        v3: []
+
+  imports:
+  - project.dv.uvm
+  - hdlsim
+  - hdllint
+  - fw.proto.wb
+  - fw-hdl
+
+  fragments:
+  - src/rdl/flow.yaml
+  - src/spl/flow.yaml
+  - src/arch/flow.yaml
+  - src/ref/flow.yaml
+  - tests/uvm/flow.yaml

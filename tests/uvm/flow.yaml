@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# The unit tests and the system bench (plan §7.3).
+fragment:
+  name: uvm
+  tasks: []
