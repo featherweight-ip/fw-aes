@@ -69,6 +69,26 @@ picked by define on `hdlsim.vlt.SimImage`:
 V3 (stage-TLM stand-in, src/v3) matches the A0 RTL cycle count at the system
 level; V0 is zero-time, so its count is only bus/DMA traffic.
 
+## fw-aes-dma vs opaque baseline (item 14a3): `dfm run bench-aesdma-run`
+
+Same 8 blocks, key and bus timing (7 ns per access on the decoder, 10 ns
+clock), v3 view, but no external fw-wb-dma: the host writes SRC/DST/LEN and
+CTRL.START once, and fw-aes-dma's own master fetches, encrypts and stores every
+block (tests/bench/fw_aes_dma_bench_tb.sv).
+
+| bench                     | task             | clks | blocks/clk |
+|---------------------------|------------------|------|------------|
+| fw-aes + fw-wb-dma (v3)   | bench-v3-run     | 128  | 0.062500   |
+| fw-aes-dma (v3)           | bench-aesdma-run | 76   | 0.105263   |
+
+1.68x fewer clocks. The gain is all bus/control traffic: the timed region of
+fw-aes-dma makes 69 accesses (4 descriptor/START, 64 fetch/store, 1 STATUS),
+while the baseline programs two DMA channels per block, polls DONE and writes
+CTRL. The AES op (4 clks/block, 32 total) is unchanged and still serial with
+fetch and store; overlapping them (fetch i+1 during rounds of i) is the
+co-synthesis step (PLAN Ph4), not done here. The TL bench charges no
+arbitration between host and the fw-aes-dma master (one decoder, sequential).
+
 ## Cycle fidelity V3 vs A0 RTL (item 9): `dfm run vectors-run-fid`
 
 tests/unit/fw_aes_fid_tb.sv runs the `rtl` view (A0 XLS RTL) and the `v3`

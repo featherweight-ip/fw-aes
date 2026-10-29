@@ -85,3 +85,21 @@ fragment:
   - name: bench-v3-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-v3-img]
+
+  # fw-aes-dma (item 14a3, Q4 variant): the same 8 blocks, no external DMA.
+  - name: bench-aesdma-tb
+    uses: std.FileSet
+    needs: [aes-dma-tl, v3-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_bench_tb.sv]
+
+  - name: bench-aesdma-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+
+  - name: bench-aesdma-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-img]
