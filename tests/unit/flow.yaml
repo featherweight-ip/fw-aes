@@ -128,6 +128,24 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [csr-img]
 
+  # CSR access test of the fw-aes-dma register model (item 14a1).
+  - name: aes-dma-csr-tb
+    uses: std.FileSet
+    needs: [fw-hdl.hdl.sv-src, aes-dma-reg-model]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_csr_tb.sv]
+
+  - name: aes-dma-csr-img
+    uses: hdlsim.vlt.SimImage
+    needs: [aes-dma-csr-tb]
+    with:
+      top: [fw_aes_dma_csr_tb]
+
+  - name: aes-dma-csr-run
+    uses: hdlsim.vlt.SimRun
+    needs: [aes-dma-csr-img]
+
   # fw-aes driven by bus accesses through its Wishbone target (V0).
   - name: wb-tb
     uses: std.FileSet

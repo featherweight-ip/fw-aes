@@ -21,3 +21,22 @@ fragment:
       options:
         package-name: fw_aes_reg_pkg
         type-style: lexical
+
+  # fw-aes-dma variant (built-in DMA): key, SRC/DST/LEN, CTRL, STATUS.
+  - export: aes-dma-rdl-src
+    uses: std.FileSet
+    with:
+      type: systemRDLSource
+      include:
+      - fw_aes_dma_regs.rdl
+
+  - export: aes-dma-reg-model
+    uses: rdl.Export
+    needs: [aes-dma-rdl-src]
+    with:
+      format: fw-hdl
+      top: fw_aes_dma_regs
+      filename: fw_aes_dma_reg_pkg.sv
+      options:
+        package-name: fw_aes_dma_reg_pkg
+        type-style: lexical

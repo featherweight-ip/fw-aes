@@ -1,0 +1,61 @@
+// Register map of fw-aes-dma, the variant with a built-in DMA
+// (docs/design/dma-integrated.md): one 32-bit WISHBONE word per register.
+//
+// The key is CSR-loaded as in fw_aes_regs (KEY0..KEY7, same byte order);
+// data moves over the master port only, so there are no DIN/DOUT registers.
+// SRC and DST are byte addresses of the first block (16-byte aligned), LEN
+// the number of 16-byte blocks. Writing CTRL.START = 1 runs the loop
+// fetch block -> AES -> store block LEN times; STATUS.BUSY is set until the
+// last block is stored, then STATUS.DONE (or STATUS.ERROR on a bus error).
+// STATUS.COUNT is the number of blocks stored so far.
+
+addrmap fw_aes_dma_regs {
+    name = "fw-aes-dma";
+    desc = "Register map of fw-aes-dma: key, descriptor, control and status.";
+
+    default regwidth = 32;
+    default accesswidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg data_word_r {
+        field { desc = "Four bytes, the lowest-numbered in [31:24]."; } WORD[31:0] = 0;
+    };
+
+    reg addr_r {
+        field { desc = "Byte address, 16-byte aligned."; } ADDR[31:0] = 0;
+    };
+
+    data_word_r KEY0 @ 0x00;
+    data_word_r KEY1 @ 0x04;
+    data_word_r KEY2 @ 0x08;
+    data_word_r KEY3 @ 0x0C;
+    data_word_r KEY4 @ 0x10;
+    data_word_r KEY5 @ 0x14;
+    data_word_r KEY6 @ 0x18;
+    data_word_r KEY7 @ 0x1C;
+
+    addr_r SRC @ 0x20;
+    addr_r DST @ 0x24;
+
+    reg {
+        desc = "Number of 16-byte blocks to process.";
+        field { desc = "Block count."; } BLOCKS[15:0] = 0;
+    } LEN @ 0x28;
+
+    reg {
+        desc = "Control.";
+        field { singlepulse; desc = "Write 1 to start LEN blocks."; } START[0:0] = 0;
+        field { desc = "1: decrypt, 0: encrypt."; } DECRYPT[1:1] = 0;
+        field { desc = "Key width (aes_mode_e): 0 = 128, 2 = 256."; } MODE[3:2] = 0;
+        field { desc = "Raise the interrupt when DONE or ERROR is set."; } IRQ_EN[4:4] = 0;
+    } CTRL @ 0x2C;
+
+    reg {
+        desc = "Status.";
+        field { sw = r; hw = w; desc = "The block loop is running."; } BUSY[0:0] = 0;
+        field { sw = r; hw = w; desc = "All LEN blocks are stored."; } DONE[1:1] = 0;
+        field { sw = r; hw = w; desc = "A bus access failed; the loop stopped."; } ERROR[2:2] = 0;
+        field { sw = r; hw = w; desc = "Blocks stored so far."; } COUNT[31:16] = 0;
+    } STATUS @ 0x30;
+};
