@@ -67,6 +67,10 @@ package:
     - name: dv-flow-libsynth
       url: https://github.com/dv-flow/dv-flow-libsynth.git
       dep-set: default-dev
+    # HLS (plan Ph2-3): arch-spec scheduling/binding, V3 emission (src/arch).
+    - name: zuspec-synth
+      url: https://a9550.perch-char.ts.net/zuspec/zuspec-synth.git
+      dep-set: default-dev
 
     # Tools
     - name: verilator
