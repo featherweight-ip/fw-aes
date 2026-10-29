@@ -63,6 +63,29 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v3]
 
+  # Other architectures as v3 stand-ins (item 12b, src/arch): A1 11, A2 44 clk/op.
+  - name: vectors-img-v3-a1
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v3-tb]
+    with:
+      top: [fw_aes_vectors_v3_tb]
+      defines: [FW_AES_V3_CLKS=11]
+
+  - name: vectors-run-v3-a1
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v3-a1]
+
+  - name: vectors-img-v3-a2
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v3-tb]
+    with:
+      top: [fw_aes_vectors_v3_tb]
+      defines: [FW_AES_V3_CLKS=44]
+
+  - name: vectors-run-v3-a2
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v3-a2]
+
   # Cycle fidelity: v3 against rtl, same ops, equal clocks per op (item 9).
   - name: vectors-fid-tb
     uses: std.FileSet

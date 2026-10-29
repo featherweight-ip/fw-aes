@@ -6,6 +6,12 @@
 // IN_FLOP + STAGES + OUT_FLOP = 4 clocks, as the `rtl` view measures.
 // Each op computes its result at zero time (aes_pkg, like V0) and then
 // spends one clock per stage: cost per stage, not per gate.
+// clks_per_op (ctor arg, default `FW_AES_V3_CLKS, 0 = the A0 schedule) stands
+// in for other architectures (src/arch: A1 11, A2 44) until zuspec-synth
+// generates them (request zuspec-arch-sched).
+`ifndef FW_AES_V3_CLKS
+`define FW_AES_V3_CLKS 0
+`endif
 interface fw_aes_clk_if(input logic clk);
 endinterface
 
@@ -23,9 +29,13 @@ package fw_aes_v3_pkg;
         Key                   m_key;
         KeyWidth              m_width;
         int unsigned          m_clks;   // clocks spent in encrypt/decrypt
+        int unsigned          m_clks_per_op;
 
-        function new(virtual fw_aes_clk_if vif);
+        function new(virtual fw_aes_clk_if vif,
+                     int unsigned clks_per_op = `FW_AES_V3_CLKS);
             this.vif = vif;
+            m_clks_per_op = (clks_per_op != 0) ? clks_per_op
+                                               : IN_FLOP + STAGES + OUT_FLOP;
         endfunction
 
         virtual task set_key(key_t key, aes_mode_e mode);
@@ -35,7 +45,7 @@ package fw_aes_v3_pkg;
 
         // One transaction through the pipeline: a clock per register stage.
         task advance();
-            repeat (IN_FLOP + STAGES + OUT_FLOP) begin
+            repeat (m_clks_per_op) begin
                 @(posedge vif.clk);
                 m_clks++;
             end

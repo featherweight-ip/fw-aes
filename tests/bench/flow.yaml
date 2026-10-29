@@ -86,6 +86,29 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-v3-img]
 
+  # v3 with A1 (11 clk/op) and A2 (44 clk/op) timing (item 12b, src/arch).
+  - name: bench-v3-a1-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3, FW_AES_V3_CLKS=11]
+
+  - name: bench-v3-a1-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-a1-img]
+
+  - name: bench-v3-a2-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3, FW_AES_V3_CLKS=44]
+
+  - name: bench-v3-a2-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-a2-img]
+
   # fw-aes-dma (item 14a3, Q4 variant): the same 8 blocks, no external DMA.
   - name: bench-aesdma-tb
     uses: std.FileSet
@@ -127,3 +150,26 @@ fragment:
   - name: bench-aesdma-pipe-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-pipe-img]
+
+  # fw-aes-dma pipe with A1/A2 timing (item 12b): the bus picks the architecture.
+  - name: bench-aesdma-pipe-a1-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE, FW_AES_V3_CLKS=11]
+
+  - name: bench-aesdma-pipe-a1-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-a1-img]
+
+  - name: bench-aesdma-pipe-a2-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE, FW_AES_V3_CLKS=44]
+
+  - name: bench-aesdma-pipe-a2-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-a2-img]
