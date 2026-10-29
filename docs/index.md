@@ -9,5 +9,7 @@ and a comparison of standalone and integrated DMA configurations.
 :maxdepth: 2
 :caption: Contents
 
+
+walkthrough/index
 design/index
 ```
