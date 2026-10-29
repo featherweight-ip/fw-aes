@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# The `rtl` view: fw_aes_api over the A0 XLS RTL.
+fragment:
+  tasks:
+  - export: rtl-view
+    uses: std.FileSet
+    needs: [spl, a0-rtl]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_rtl.sv]

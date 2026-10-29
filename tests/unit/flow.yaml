@@ -3,9 +3,16 @@
 # Unit tests: FIPS-197 known answers through the fw_aes_api.
 fragment:
   tasks:
-  - name: vectors-tb
+  - name: vectors-pkg
     uses: std.FileSet
     needs: [spl]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_pkg.sv]
+
+  - name: vectors-tb
+    uses: std.FileSet
+    needs: [vectors-pkg]
     with:
       type: systemVerilogSource
       include: [fw_aes_vectors_tb.sv]
@@ -19,6 +26,24 @@ fragment:
   - name: vectors-run-v0
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v0]
+
+  # The same vectors on the `rtl` view (A0 XLS RTL, clocked).
+  - name: vectors-rtl-tb
+    uses: std.FileSet
+    needs: [rtl-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_rtl_tb.sv]
+
+  - name: vectors-img-rtl
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-rtl-tb]
+    with:
+      top: [fw_aes_vectors_rtl_tb]
+
+  - name: vectors-run-rtl
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-rtl]
 
   # CSR access test: the generated fw-hdl register model, by address.
   - name: csr-tb
