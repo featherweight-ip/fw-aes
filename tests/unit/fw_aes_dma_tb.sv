@@ -63,7 +63,11 @@ module fw_aes_dma_tb;
     initial begin
         mem_t      mem = new();
         fw_aes_v3  v3  = new(bus);
+`ifdef FW_AES_DMA_OVERLAP
+        fw_aes_dma d   = new(v3, mem, 1);
+`else
         fw_aes_dma d   = new(v3, mem);
+`endif
         bit [31:0] status;
         run(d, mem, "fips197-c1-aes128-x4", {128'h000102030405060708090a0b0c0d0e0f, 128'h0},
             AES_128, 0, 128'h00112233445566778899aabbccddeeff,

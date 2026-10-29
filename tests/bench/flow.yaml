@@ -103,3 +103,15 @@ fragment:
   - name: bench-aesdma-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-img]
+
+  # Item 14b: fw_aes_dma with fetch of block i+1 overlapped with AES op i.
+  - name: bench-aesdma-ov-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_OVERLAP]
+
+  - name: bench-aesdma-ov-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-ov-img]

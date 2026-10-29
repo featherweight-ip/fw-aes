@@ -63,7 +63,13 @@ module fw_aes_dma_bench_tb;
         bit        err;
         data_t     w;
 
+`ifdef FW_AES_DMA_OVERLAP
+        dec.aes = new(v3, dec, 1);
+        `define AESDMA_VIEW "aesdma-ov"
+`else
         dec.aes = new(v3, dec);
+        `define AESDMA_VIEW "aesdma"
+`endif
 
         pt[0] = 128'h00112233445566778899aabbccddeeff;
         for (int i = 1; i < NB; i++) pt[i] = {4{32'hA5A5_0000 + i}} ^ pt[0];
@@ -100,8 +106,8 @@ module fw_aes_dma_bench_tb;
             $display("FAIL: reference C.1 mismatch"); errors++;
         end
 
-        $display("BENCH: view=aesdma blocks=%0d clks=%0d bus accesses=%0d blocks/clk=%f",
-                 NB, c0, a0, real'(NB) / real'(c0));
+        $display("BENCH: view=%s blocks=%0d clks=%0d bus accesses=%0d blocks/clk=%f",
+                 `AESDMA_VIEW, NB, c0, a0, real'(NB) / real'(c0));
         if (errors == 0) $display("TEST PASSED");
         else             $display("TEST FAILED: %0d errors", errors);
         $finish;
