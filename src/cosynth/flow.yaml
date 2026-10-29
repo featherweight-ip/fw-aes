@@ -1,0 +1,73 @@
+# yaml-language-server: $schema=https://dv-flow.github.io/flow.dv.schema.json
+#
+# Co-synthesis pass (fw.hdl.cosynth, python/fw/hdl/cosynth/rewrite.py) over our
+# lowered A0 encrypt (a0-ll V5 + structure.json), under the contract records
+# contracts.yaml (C1-C4, proved on fw_aes_dma_xtor.sv). The stage modules are
+# reused; only the top is rewritten. a0-cs applies X6,X2,X1,X3 (X5 N/A for A0);
+# a0-cs-<xs> are the cumulative variants for per-X area deltas.
+fragment:
+  tasks:
+  - name: cosynth-records
+    uses: std.FileSet
+    with:
+      type: cosynthRecords
+      include: [contracts.yaml]
+
+  - name: CosynthPass
+    desc: Rewrite a lowered V5 top under contract records (fw.hdl.cosynth)
+    consumes:
+    - filetype: systemVerilogSource
+    - filetype: xlsLowerStructure
+    - filetype: cosynthRecords
+    passthrough: none
+    with:
+      module: {type: str, value: aes_pkg__encrypt}
+      xs: {type: list, value: [X6, X2, X1, X3, X5]}
+      top: {type: str, value: ""}
+      passthrough_other: {type: bool, value: true}
+    shell: pytask
+    run: fw.hdl.cosynth.tasks.Pass
+
+  - name: a0-cs
+    desc: A0 encrypt V5 after X6,X2,X1,X3 (X5 recorded N/A)
+    uses: CosynthPass
+    needs: [a0-ll, cosynth-records]
+
+  - name: a0-cs-x6
+    uses: CosynthPass
+    needs: [a0-ll, cosynth-records]
+    with: {xs: [X6], passthrough_other: false}
+  - name: a0-cs-x6x2
+    uses: CosynthPass
+    needs: [a0-ll, cosynth-records]
+    with: {xs: [X6, X2], passthrough_other: false}
+  - name: a0-cs-x6x2x1
+    uses: CosynthPass
+    needs: [a0-ll, cosynth-records]
+    with: {xs: [X6, X2, X1], passthrough_other: false}
+
+  - name: rtl-cs-view
+    uses: std.FileSet
+    needs: [spl, a0-cs]
+    with:
+      type: systemVerilogSource
+      base: ../rtl
+      include: [fw_aes_rtl.sv]
+
+  # ---- ECP5 synthesis (encrypt only) ----
+  - name: a0-cs-synth-ecp5
+    uses: synth.yosys.Synth
+    needs: [a0-cs]
+    with: {target: ecp5, top: aes_pkg__encrypt, formats: [json]}
+  - name: a0-cs-x6-synth-ecp5
+    uses: synth.yosys.Synth
+    needs: [a0-cs-x6]
+    with: {target: ecp5, top: aes_pkg__encrypt, formats: [json]}
+  - name: a0-cs-x6x2-synth-ecp5
+    uses: synth.yosys.Synth
+    needs: [a0-cs-x6x2]
+    with: {target: ecp5, top: aes_pkg__encrypt, formats: [json]}
+  - name: a0-cs-x6x2x1-synth-ecp5
+    uses: synth.yosys.Synth
+    needs: [a0-cs-x6x2x1]
+    with: {target: ecp5, top: aes_pkg__encrypt, formats: [json]}

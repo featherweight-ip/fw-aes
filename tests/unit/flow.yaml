@@ -63,6 +63,24 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-ll]
 
+  # AES-128 vector on the `rtl` view with encrypt from the co-synthesis pass (src/cosynth, a0-cs).
+  - name: vectors-cs-tb
+    uses: std.FileSet
+    needs: [rtl-cs-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_cs_tb.sv]
+
+  - name: vectors-img-cs
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-cs-tb]
+    with:
+      top: [fw_aes_vectors_cs_tb]
+
+  - name: vectors-run-cs
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-cs]
+
   # The same vectors on the `v3` view (stage-TLM from the A0 schedule).
   - name: vectors-v3-tb
     uses: std.FileSet

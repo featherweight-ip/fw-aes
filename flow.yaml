@@ -49,6 +49,7 @@ package:
   - src/ll/flow.yaml
   - src/v5/flow.yaml
   - src/dma/flow.yaml
+  - src/cosynth/flow.yaml
   - tests/unit/flow.yaml
   - tests/bench/flow.yaml
   - tests/uvm/flow.yaml

@@ -250,3 +250,41 @@ Reading:
 - The V4 <-> V5 proof shares per-node expression strings between V4 and V5, so it
   checks registers, stage split and port packing, not each op's lowering; op
   semantics are covered by V3 <-> V4 (random sim) and the vectors.
+
+## Co-synthesis (A0) (item 14d3): `dfm run a0-cs`, `vectors-run-cs`
+
+`a0-cs` (src/cosynth/flow.yaml, fw-hdl wpk/cosynth 756c438, `fw.hdl.cosynth pass`)
+rewrites the top of our A0 V5 (`a0-ll`) using the contract records in
+src/cosynth/contracts.yaml (C1-C4, item 14d3a). It applies an X only if every
+clause id it cites is in the records. Stage modules are copied verbatim (checked
+byte-identical); only the top is regenerated. Applied: X6 (AES-128 only: key
+width and key[255:128] tied 0), X2 (key flops removed, stage 0 reads the CSR
+key), X1 (block input flops removed, `v0` folded into `input_valid`), X3 (p1
+load enables and data resets removed). X5 (sharing) is N/A for A0: it is fully
+unrolled and has nothing to share (needs A2/A3).
+
+| encrypt, ECP5 `synth_lattice` | TRELLIS_FF | LUT4 | clk/op (sim) |
+|---|---|---|---|
+| ours, pre (`a0-ll-synth-ecp5`, item 13b) | 999 | 111073 | 4 (`vectors-run-ll`) |
+| co-synthesized (`a0-cs-synth-ecp5`) | 418 (-58 %) | 83329 (-25 %) | 3 (`vectors-run-cs`) |
+
+Equivalence pre == post: `python3 -m fw.hdl.cosynth equiv <a0-ll v5.sv>
+<a0-cs cosynth.sv> <cosynth_pass.json> <outdir>` (CLI, no dfm task; ~4 min).
+SBY `abc pdr` PASS at stage-output offsets 0/128/256/258. The X6 lemma
+`S(key,0,blk) == S({0,key[127:0]},0,blk)` over S = stage1 o stage0 is PASS (ABC
+iprove). Mutants FAIL as expected: a wrong latency shift, and zeroing the low key half.
+
+Caveats:
+- Only end points are quoted. LUT4 counts for the intermediate X steps vary by
+  ±25k between runs (ABC on a 100k-LUT flat netlist is not monotone).
+- The sequential proof abstracts the stages (stage 0 = injective normalize
+  justified by the X6 lemma, stage 1 = projections). There is no BMC over the real AES stages.
+- X6 assumes MODE=0 (AES-128) as a host premise. C3.mode_fixed proves only that
+  MODE is stable. The AES-256 vector is out of contract and is not run on post.
+- `vectors-run-cs` runs one vector (FIPS-197 C.1). The intermediate variants and
+  random vectors were not simulated, and decrypt is still XLS.
+- With `v0` folded, X1/X2 no longer need C1.block_stable / C3.key_stable_op (the
+  no-stability mutant PASSes), but the pass still cites them. The link between the
+  core-pin assumptions and the xtor proofs (C1-C4) is by clause id only.
+- 418 FF is below the model's 514 register bits: Yosys removed ~96 p1 flops
+  once enables and resets were gone. This was not analysed.
