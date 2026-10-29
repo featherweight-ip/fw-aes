@@ -106,3 +106,27 @@ testbench included). One run each, 1 thread; noise not measured.
   rerun `-f` with stock 5.052 so rundir/ holds stock images.
 - Go/no-go: go for a speed claim of V3 over RTL; re-measure against a real V5
   when Ph3 makes one, and with several runs for spread.
+
+## Scaling bench: cost against N and k (item 11, PLAN 6.4.3)
+
+`tests/unit/fw_aes_scale_tb.sv`: N engines on one clock, k active, a fixed
+40000 ops (enc+dec pairs) spread over the active ones; idle engines are
+configured and wait. Tasks `scale-run-{rtl,v3}-n<N>k<K>` (tests/unit/flow.yaml).
+Verilator 5.052, walltime from sim.log; every case TEST PASSED.
+
+| N | k | clks | rtl wall (s) | v3 wall (s) | rtl us/block | v3 us/block |
+|---|---|------|------|------|------|------|
+| 1  | 1  | 160k | 0.454  | 0.185 | 11.4 | 4.6 |
+| 4  | 1  | 160k | 1.428  | 0.180 | 35.7 | 4.5 |
+| 16 | 1  | 160k | 8.032  | 0.181 | 201  | 4.5 |
+| 64 | 1  | 160k | 33.236 | 0.183 | 831  | 4.6 |
+| 16 | 4  | 40k  | 1.930  | 0.137 | 48.3 | 3.4 |
+| 16 | 16 | 10k  | 0.522  | 0.124 | 13.1 | 3.1 |
+
+- **rtl (stand-in for V5) cost grows with N** (~linear: 64 engines, 73x the
+  N=1 time at the same clocks): every engine is evaluated every clock, busy or not.
+- **v3 cost is flat in N** (0.18 s from N=1 to N=64): an idle v3 engine has no
+  process, so it costs nothing. With more active engines it gets cheaper per block
+  (fewer clocks total), so v3 cost follows activity, not size.
+- Not done: memory per case; mixes (active engine at rtl, idle at v3); the full
+  §7.3 system (wb ic + DMA) with N engines. The unit-level bench already shows P9.

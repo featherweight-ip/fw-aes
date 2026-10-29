@@ -145,3 +145,144 @@ fragment:
   - name: wb-run
     uses: hdlsim.vlt.SimRun
     needs: [wb-img]
+
+  # Scaling bench (item 11, PLAN 6.4.3): N engines, K active, 40000 ops total.
+  # Task scale-run-<view>-n<N>k<K>.
+  - name: scale-tb
+    uses: std.FileSet
+    needs: [rtl-view, v3-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_scale_tb.sv]
+
+  - name: scale-img-rtl-n1k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=1, FW_AES_SCALE_K=1]
+
+  - name: scale-run-rtl-n1k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-rtl-n1k1]
+
+  - name: scale-img-rtl-n4k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=4, FW_AES_SCALE_K=1]
+
+  - name: scale-run-rtl-n4k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-rtl-n4k1]
+
+  - name: scale-img-rtl-n16k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=16, FW_AES_SCALE_K=1]
+
+  - name: scale-run-rtl-n16k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-rtl-n16k1]
+
+  - name: scale-img-rtl-n64k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=64, FW_AES_SCALE_K=1]
+
+  - name: scale-run-rtl-n64k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-rtl-n64k1]
+
+  - name: scale-img-rtl-n16k4
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=16, FW_AES_SCALE_K=4]
+
+  - name: scale-run-rtl-n16k4
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-rtl-n16k4]
+
+  - name: scale-img-rtl-n16k16
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=16, FW_AES_SCALE_K=16]
+
+  - name: scale-run-rtl-n16k16
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-rtl-n16k16]
+
+  - name: scale-img-v3-n1k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=1, FW_AES_SCALE_K=1, FW_AES_SCALE_V3]
+
+  - name: scale-run-v3-n1k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-v3-n1k1]
+
+  - name: scale-img-v3-n4k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=4, FW_AES_SCALE_K=1, FW_AES_SCALE_V3]
+
+  - name: scale-run-v3-n4k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-v3-n4k1]
+
+  - name: scale-img-v3-n16k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=16, FW_AES_SCALE_K=1, FW_AES_SCALE_V3]
+
+  - name: scale-run-v3-n16k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-v3-n16k1]
+
+  - name: scale-img-v3-n64k1
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=64, FW_AES_SCALE_K=1, FW_AES_SCALE_V3]
+
+  - name: scale-run-v3-n64k1
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-v3-n64k1]
+
+  - name: scale-img-v3-n16k4
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=16, FW_AES_SCALE_K=4, FW_AES_SCALE_V3]
+
+  - name: scale-run-v3-n16k4
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-v3-n16k4]
+
+  - name: scale-img-v3-n16k16
+    uses: hdlsim.vlt.SimImage
+    needs: [scale-tb]
+    with:
+      top: [fw_aes_scale_tb]
+      defines: [FW_AES_SCALE_N=16, FW_AES_SCALE_K=16, FW_AES_SCALE_V3]
+
+  - name: scale-run-v3-n16k16
+    uses: hdlsim.vlt.SimRun
+    needs: [scale-img-v3-n16k16]
