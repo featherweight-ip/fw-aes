@@ -7,7 +7,12 @@ co-design/co-synthesis opportunities?
 
 **Both, as peers** (owner, batch 2). Neither is the baseline of the other;
 standalone-vs-integrated.md lists the questions each one answers and where
-they differ.
+they differ. In short (B2-3b/B2-4b, baseline.md): with standalone at its
+best (HW-handshake streaming), integrated pipe is still 1.27x (A1, fast bus,
+op-bound) to ~2.1x (any arch, slow bus, bus-bound) faster, because the
+external DMA moves 16 accesses per block on one engine against 8 and the
+single DOUT buffer stalls the next op; the pipe reaches the op II, delivers
+the first block 1-13 clks earlier, and changes which arch is worth its area.
 
 - **Standalone (fw-aes + external DMA):** the system bench (`tests/bench`):
   fw-aes is a Wishbone CSR target (`src/rdl/fw_aes_regs.rdl`,
@@ -36,6 +41,12 @@ and 128 on the A0 RTL. It measures the bench, not hardware. A fair
 baseline vs variant comparison needs clocked (cycle-accurate) buses on
 both sides: the V3 stage-TLM or RTL views with a clocked wb interconnect
 and memory.
+
+Update (batch 2): the comparison now uses the V3 views on both sides with
+the same TL bus model (`bench-v3-stream[-aN]-run` vs
+`bench-aesdma-pipe[-aN]-run`) and a sweep over bus access time, block count
+and arch (`tests/bench/sweep.py`); results in baseline.md and
+standalone-vs-integrated.md. A clocked interconnect is still not modelled.
 
 ## Outline items affected
 
