@@ -63,28 +63,74 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v3]
 
-  # Other architectures as v3 stand-ins (item 12b, src/arch): A1 11, A2 44 clk/op.
+  # Other architectures: V3 views timed by zuspec.synth.ArchSched (src/v3/flow.yaml).
+  - name: vectors-v3-a1-tb
+    uses: std.FileSet
+    needs: [v3-a1-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v3_tb.sv]
+
   - name: vectors-img-v3-a1
     uses: hdlsim.vlt.SimImage
-    needs: [vectors-v3-tb]
+    needs: [vectors-v3-a1-tb]
     with:
       top: [fw_aes_vectors_v3_tb]
-      defines: [FW_AES_V3_CLKS=11]
 
   - name: vectors-run-v3-a1
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v3-a1]
 
+  - name: vectors-v3-a2-tb
+    uses: std.FileSet
+    needs: [v3-a2-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v3_tb.sv]
+
   - name: vectors-img-v3-a2
     uses: hdlsim.vlt.SimImage
-    needs: [vectors-v3-tb]
+    needs: [vectors-v3-a2-tb]
     with:
       top: [fw_aes_vectors_v3_tb]
-      defines: [FW_AES_V3_CLKS=44]
 
   - name: vectors-run-v3-a2
     uses: hdlsim.vlt.SimRun
     needs: [vectors-img-v3-a2]
+
+  - name: vectors-v3-a3-tb
+    uses: std.FileSet
+    needs: [v3-a3-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v3_tb.sv]
+
+  - name: vectors-img-v3-a3
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v3-a3-tb]
+    with:
+      top: [fw_aes_vectors_v3_tb]
+
+  - name: vectors-run-v3-a3
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v3-a3]
+
+  - name: vectors-v3-a4-tb
+    uses: std.FileSet
+    needs: [v3-a4-view, vectors-pkg]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_vectors_v3_tb.sv]
+
+  - name: vectors-img-v3-a4
+    uses: hdlsim.vlt.SimImage
+    needs: [vectors-v3-a4-tb]
+    with:
+      top: [fw_aes_vectors_v3_tb]
+
+  - name: vectors-run-v3-a4
+    uses: hdlsim.vlt.SimRun
+    needs: [vectors-img-v3-a4]
 
   # Cycle fidelity: v3 against rtl, same ops, equal clocks per op (item 9).
   - name: vectors-fid-tb

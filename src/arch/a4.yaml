@@ -8,3 +8,4 @@ sbox_kind: canright
 ii: 6
 latency: 6                      # 1 load + 5 double-rounds
 target: ecp5
+key_expansion: precomputed     # round keys computed at set_key (C3)

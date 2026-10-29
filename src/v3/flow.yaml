@@ -20,3 +20,63 @@ fragment:
     with:
       type: systemVerilogSource
       include: [fw_aes_v3.sv]
+
+  # ---- V3 views timed by zuspec.synth.ArchSched on the arch specs (A1-A4) ----
+  # Input: the XLS opt IR of a0-rtl (aes_pkg::encrypt/decrypt) + src/arch.
+  # Scheduled for AES-128 (key_width = KEY_128 = 0); 256-bit keys take the
+  # same clocks in the generated class. Same package/class names as
+  # v3-stage-tlm, so fw_aes_v3.sv is reused unchanged.
+  - name: v3-a1-sched
+    uses: zuspec.synth.ArchSched
+    needs: [a0-rtl, arch-specs]
+    with: &archsched
+      arch: A1
+      functions: [aes_pkg::encrypt, aes_pkg::decrypt]
+      specialize: {key_width: 0}
+      data_inputs: [block_]
+      pkg_name: aes_stage_tlm_pkg
+      clk_if: fw_aes_clk_if
+      imports: [aes_pkg]
+      arg_types: {key_width: "aes_pkg::KeyWidth"}
+  - name: v3-a1-view
+    uses: std.FileSet
+    needs: [spl, v3-a1-sched]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_v3.sv]
+  - name: v3-a2-sched
+    uses: zuspec.synth.ArchSched
+    needs: [a0-rtl, arch-specs]
+    with:
+      <<: *archsched
+      arch: A2
+  - name: v3-a2-view
+    uses: std.FileSet
+    needs: [spl, v3-a2-sched]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_v3.sv]
+  - name: v3-a3-sched
+    uses: zuspec.synth.ArchSched
+    needs: [a0-rtl, arch-specs]
+    with:
+      <<: *archsched
+      arch: A3
+  - name: v3-a3-view
+    uses: std.FileSet
+    needs: [spl, v3-a3-sched]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_v3.sv]
+  - name: v3-a4-sched
+    uses: zuspec.synth.ArchSched
+    needs: [a0-rtl, arch-specs]
+    with:
+      <<: *archsched
+      arch: A4
+  - name: v3-a4-view
+    uses: std.FileSet
+    needs: [spl, v3-a4-sched]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_v3.sv]

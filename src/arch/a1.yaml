@@ -7,3 +7,4 @@ sbox_kind: lut
 ii: 11                          # no overlap between blocks
 latency: 11                     # 1 load + 10 rounds
 target: ecp5
+key_expansion: precomputed     # round keys computed at set_key (C3); 16 S-boxes for the data path only
