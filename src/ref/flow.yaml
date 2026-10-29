@@ -25,3 +25,15 @@ fragment:
       pipeline_stages: 2
       input_valid_signal: input_valid
       output_valid_signal: output_valid
+
+  # ---- A0 numbers (item 6): ECP5 synthesis of the XLS RTL ----
+  - name: a0-synth-ecp5
+    desc: Yosys synth_lattice (ECP5) of A0 encrypt; stat.json
+    uses: synth.yosys.Synth
+    needs: [a0-rtl]
+    with:
+      target: ecp5
+      # decrypt is left out: its Yosys run is OOM-killed at ~58 GB on a 60 GB
+      # host (docs/design/baseline.md); encrypt takes ~320 s, 15 GB.
+      top: aes_pkg__encrypt
+      formats: [json]
