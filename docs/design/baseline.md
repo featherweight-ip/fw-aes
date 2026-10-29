@@ -170,28 +170,37 @@ Verilator 5.052, walltime from sim.log; every case TEST PASSED.
 
 ## Exploration at V3 (item 12c): "the bus picks the architecture"
 
-II, latency and S-boxes from `src/arch/a*.yaml`. A1/A2 are V3 stand-ins
-(`fw_aes_v3` ctor `clks_per_op`, define `FW_AES_V3_CLKS`), not generated from
-the arch spec (request zuspec-arch-sched, item 12d). A3/A4 have no stand-in;
-the `a6` row uses clks/op = 6 (A4's II) to probe the knee. Clocks are for 8
-blocks; each V3 sim runs in well under 1 s wall.
+A1-A4 are V3 views scheduled by `zuspec.synth.ArchSched` (zuspec-synth branch
+wpk/arch-sched, item 12d) from the `src/arch/a*.yaml` specs and A0's XLS IR,
+specialized to AES-128; tasks `v3-a<N>-view` in src/v3/flow.yaml. Encrypt and
+decrypt have the same latency for the `key_expansion` chosen. A0 uses XLS's own
+2-stage schedule (fw.hdl.xls.StageTLM). A5 is still a stand-in (`fw_aes_v3`
+ctor `clks_per_op`, define `FW_AES_V3_CLKS=21`): the scheduler does not model
+masking. `a6` (define `FW_AES_V3_CLKS=6`) was the stand-in for A4 and gives the
+same 57 as the scheduled A4. Clocks are for 8 blocks; each V3 sim runs in well
+under 1 s wall.
 
-| Arch | fold | S-boxes | II | latency | bench-v3 (ext. DMA, serial) | aesdma-pipe |
-|------|------|---------|----|---------|-----------------------------|-------------|
-| A0 | unrolled | 200 LUT | 1 (4 clk/op in V3) | 4 | 128 | 50 |
-| A1 | iterated | 16 LUT | 11 | 11 | 184 | 97 |
-| A2 | column | 4 LUT | 44 | 44 | 448 | 361 |
-| A3 | byte | 1 Canright | 160 | 160 | - | - |
-| A4 | unrolled x2 | 32 Canright | 6 | 6 | - | 57 (stand-in `a6`) |
-| A5 | iterated, masked d=1 | 16 Canright-DOM | 21 | 21 | 264 | - |
+| Arch | fold | S-boxes | key_expansion | II | latency | bench-v3 (ext. DMA, serial) | aesdma-pipe |
+|------|------|---------|---------------|----|---------|-----------------------------|-------------|
+| A0 | unrolled | 200 LUT | inline (XLS) | 1 (4 clk/op in V3) | 4 | 128 | 50 |
+| A1 | iterated | 16 LUT | precomputed | 11 | 11 | 184 | 97 |
+| A2 | column | 4 LUT | shared | 50 | 50 | 496 | 409 |
+| A3 | byte | 1 Canright | shared | 200 | 200 (161 precomputed) | 1696 | 1609 |
+| A4 | unrolled x2 | 32 Canright | precomputed | 6 | 6 | 144 | 57 |
+| A5 | iterated, masked d=1 | 16 Canright-DOM | (stand-in) | 21 | 21 | 264 | - |
 
-Tasks: `bench-v3-run`, `bench-v3-a{1,2}-run`, `bench-aesdma-pipe-run`,
-`bench-aesdma-pipe-a{1,2,6}-run` (tests/bench/flow.yaml).
+With `key_expansion: shared` A1 would be 14 enc / 20 dec and A4 8 / 10; A2
+precomputed would be 41. Per-arch schedule (latency, II, ResMII, S-box binding):
+rundir/org.fwip.aes.v3-a<N>-sched/{schedule.json,aes_pkg__*.A<N>.sched.txt}.
+
+Tasks: `bench-v3-run`, `bench-v3-a{1,2,3,4,5}-run`, `bench-aesdma-pipe-run`,
+`bench-aesdma-pipe-a{1,2,3,4,6}-run` (tests/bench/flow.yaml).
 
 Reading: with the external DMA the bus and the op add (128 = 8 x 16), so any
 arch costs its op time on top of the bus. In fw-aes-dma pipe mode the op
 overlaps store+fetch: A0 is bus-bound at ~6.25 clk/block (50/8). An op of
 6 clk (A4-class, 32 Canright S-boxes vs A0's 200) costs only 57 (+14%);
-A1 at 11 clk/op is op-bound (97 ~ 8 x 11 + fill). So with the integrated DMA
+A1 at 11 clk/op is op-bound (97 ~ 8 x 11 + fill), and so are A2 (409) and
+A3 (1609). So with the integrated DMA
 the bus cycle per block, not the datapath, sets the useful II: architectures
 with II <= ~6 give about the same throughput, and the smallest of them wins.

@@ -2,7 +2,7 @@
 // fw.hdl.xls.StageTLM generates from the A0 schedule (aes_stage_tlm_pkg:
 // computed at zero time, then a clock per pipeline register).
 // clks_per_op (ctor arg, default `FW_AES_V3_CLKS, 0 = the A0 schedule) stands
-// in for other architectures (src/arch: A1 11, A2 44).
+// in for architectures with no scheduled view (A5 21; A1-A4: v3-a<N>-view).
 `ifndef FW_AES_V3_CLKS
 `define FW_AES_V3_CLKS 0
 `endif

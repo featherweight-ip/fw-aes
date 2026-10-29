@@ -86,24 +86,39 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-v3-img]
 
-  # v3 with A1 (11 clk/op) and A2 (44 clk/op) timing (item 12b, src/arch).
+  # v3 views of A1 (11 clk/op) and A2 (50 clk/op) scheduled by
+  # zuspec.synth.ArchSched (item 12d, src/v3/flow.yaml v3-a<N>-view).
+  - name: bench-v3-a1-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl, v3-a1-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
   - name: bench-v3-a1-img
     uses: hdlsim.vlt.SimImage
-    needs: [bench-v3-tb]
+    needs: [bench-v3-a1-tb]
     with:
       top: [fw_aes_bench_tb]
-      defines: [FW_AES_BENCH_V3, FW_AES_V3_CLKS=11]
+      defines: [FW_AES_BENCH_V3]
 
   - name: bench-v3-a1-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-v3-a1-img]
 
+  - name: bench-v3-a2-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl, v3-a2-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
   - name: bench-v3-a2-img
     uses: hdlsim.vlt.SimImage
-    needs: [bench-v3-tb]
+    needs: [bench-v3-a2-tb]
     with:
       top: [fw_aes_bench_tb]
-      defines: [FW_AES_BENCH_V3, FW_AES_V3_CLKS=44]
+      defines: [FW_AES_BENCH_V3]
 
   - name: bench-v3-a2-run
     uses: hdlsim.vlt.SimRun
@@ -187,12 +202,20 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-pipe-x1-img]
 
+  # Pipe on the scheduled A1/A2 views (item 12d); A6 is still a 6 clk/op stand-in.
+  - name: bench-aesdma-a1-tb
+    uses: std.FileSet
+    needs: [aes-dma-tl, v3-a1-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_bench_tb.sv]
+
   - name: bench-aesdma-pipe-a1-img
     uses: hdlsim.vlt.SimImage
-    needs: [bench-aesdma-tb]
+    needs: [bench-aesdma-a1-tb]
     with:
       top: [fw_aes_dma_bench_tb]
-      defines: [FW_AES_DMA_PIPE, FW_AES_V3_CLKS=11]
+      defines: [FW_AES_DMA_PIPE]
 
   - name: bench-aesdma-pipe-a1-run
     uses: hdlsim.vlt.SimRun
@@ -209,13 +232,93 @@ fragment:
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-pipe-a6-img]
 
+  - name: bench-aesdma-a2-tb
+    uses: std.FileSet
+    needs: [aes-dma-tl, v3-a2-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_bench_tb.sv]
+
   - name: bench-aesdma-pipe-a2-img
     uses: hdlsim.vlt.SimImage
-    needs: [bench-aesdma-tb]
+    needs: [bench-aesdma-a2-tb]
     with:
       top: [fw_aes_dma_bench_tb]
-      defines: [FW_AES_DMA_PIPE, FW_AES_V3_CLKS=44]
+      defines: [FW_AES_DMA_PIPE]
 
   - name: bench-aesdma-pipe-a2-run
     uses: hdlsim.vlt.SimRun
     needs: [bench-aesdma-pipe-a2-img]
+
+  # Scheduled A3 (200 clk/op) and A4 (6 clk/op) views (item 12d2).
+  - name: bench-v3-a3-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl, v3-a3-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
+  - name: bench-v3-a3-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-a3-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3]
+
+  - name: bench-v3-a3-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-a3-img]
+
+  - name: bench-aesdma-a3-tb
+    uses: std.FileSet
+    needs: [aes-dma-tl, v3-a3-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_bench_tb.sv]
+
+  - name: bench-aesdma-pipe-a3-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-a3-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE]
+
+  - name: bench-aesdma-pipe-a3-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-a3-img]
+
+  - name: bench-v3-a4-tb
+    uses: std.FileSet
+    needs: [wb-target, dma-spl, v3-a4-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_bench_tb.sv]
+
+  - name: bench-v3-a4-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-v3-a4-tb]
+    with:
+      top: [fw_aes_bench_tb]
+      defines: [FW_AES_BENCH_V3]
+
+  - name: bench-v3-a4-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-v3-a4-img]
+
+  - name: bench-aesdma-a4-tb
+    uses: std.FileSet
+    needs: [aes-dma-tl, v3-a4-view]
+    with:
+      type: systemVerilogSource
+      include: [fw_aes_dma_bench_tb.sv]
+
+  - name: bench-aesdma-pipe-a4-img
+    uses: hdlsim.vlt.SimImage
+    needs: [bench-aesdma-a4-tb]
+    with:
+      top: [fw_aes_dma_bench_tb]
+      defines: [FW_AES_DMA_PIPE]
+
+  - name: bench-aesdma-pipe-a4-run
+    uses: hdlsim.vlt.SimRun
+    needs: [bench-aesdma-pipe-a4-img]
