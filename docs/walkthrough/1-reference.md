@@ -24,3 +24,68 @@ dfm run a0-equiv > logs/a0-equiv.log 2>&1        # ~10 min; verdict inconclusive
 **Results:** {doc}`../design/baseline`, sections "ECP5 synthesis", "Fmax"
 (A0 does not fit an LFE5U-85F, so there is none), "Equivalence" and
 "Simulation speed".
+
+## SystemVerilog
+
+The V0 reference model is the package `aes_pkg` (cipher, inverse cipher and
+key expansion as SV functions). `fw_aes_api_pkg` is the operation-level API
+every view implements; `fw_aes_wb_pkg` puts it behind the CSRs of the
+generated register package `fw_aes_reg_pkg`.
+
+```{eval-rst}
+.. autosvpackage:: aes_pkg
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. autosvpackage:: fw_aes_api_pkg
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. autosvpackage:: fw_aes_wb_pkg
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. autosvpackage:: fw_aes_reg_pkg
+   :members:
+```
+
+`fw_aes_rtl` wraps the XLS-generated `aes_pkg__encrypt` and
+`aes_pkg__decrypt` modules; `fw_aes_rtl_pkg` drives it through the same API.
+
+```{eval-rst}
+.. autosvmodule:: fw_aes_rtl
+```
+
+```{eval-rst}
+.. autosvpackage:: fw_aes_rtl_pkg
+   :members:
+   :undoc-members:
+```
+
+The vector test runs the FIPS-197 vectors on whichever view the image selects:
+
+```{eval-rst}
+.. autosvmodule:: fw_aes_vectors_tb
+```
+
+```{eval-rst}
+.. autosvpackage:: fw_aes_vectors_pkg
+   :members:
+   :undoc-members:
+```
+
+### A0: XLS RTL
+
+`rundir/org.fwip.aes.a0-rtl/aes_pkg__encrypt.sv` is 5347 lines of flat,
+2-stage pipelined Verilog (`synth.xls.Codegen`, `pipeline_stages: 2`). The
+first 150 lines:
+
+```{literalinclude} ../sv/generated/a0/aes_pkg__encrypt.head.sv
+:language: systemverilog
+```

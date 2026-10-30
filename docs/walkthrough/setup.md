@@ -68,3 +68,13 @@ python3 -m sphinx -W -b html docs docs/_build/html
 ```
 
 It needs Sphinx, myst-parser and furo (the system `/usr/bin/python3` has them).
+The SystemVerilog listings use the
+[sphinx-systemverilog](https://github.com/fvutils/sphinx-systemverilog)
+extension (with pyslang); `docs/conf.py` loads it from
+`~/projects/fvutils/sphinx-systemverilog` when it is not installed.
+Generated SV (XLS RTL, stage-TLM packages, register packages) is shown from
+copies in `docs/sv/generated/`; after rerunning the flows, refresh them with
+
+```bash
+python3 docs/sv/snapshot.py    # copies from rundir/ (whole, head excerpt, or port-only stub)
+```
