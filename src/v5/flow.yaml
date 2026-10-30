@@ -3,6 +3,10 @@
 # V5 of A1-A4 encrypt: folded datapaths lowered from the arch schedules
 # (zuspec.synth.ArchLower over the same specs/IR as src/v3's ArchSched).
 # AES-128 only (specialize key_width=0). Decrypt stays the XLS Verilog.
+# The schedule is v3-a<N>-sched's (its <m>.<arch>.sched.full.json,
+# filetype archSchedule), so V3 and V5 of an arch share one schedule;
+# ArchLower refuses it if the IR / spec / specialize / data_inputs here
+# differ from the ones it was made with.
 # Per arch: v5-a<N>-enc (encrypt only, for synthesis), v5-a<N> (+ XLS
 # decrypt passed through), rtl-v5-a<N>-view (src/rtl wrapper over it) and
 # v5-a<N>-synth-ecp5 (Yosys synth_lattice, encrypt only).
@@ -10,7 +14,7 @@ fragment:
   tasks:
   - name: v5-a1-enc
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a1-sched]
     with:
       arch: A1
       functions: [aes_pkg::encrypt]
@@ -18,7 +22,7 @@ fragment:
       data_inputs: [block_]
   - name: v5-a1
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a1-sched]
     with:
       arch: A1
       functions: [aes_pkg::encrypt]
@@ -42,7 +46,7 @@ fragment:
       formats: [json]
   - name: v5-a2-enc
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a2-sched]
     with:
       arch: A2
       functions: [aes_pkg::encrypt]
@@ -50,7 +54,7 @@ fragment:
       data_inputs: [block_]
   - name: v5-a2
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a2-sched]
     with:
       arch: A2
       functions: [aes_pkg::encrypt]
@@ -74,7 +78,7 @@ fragment:
       formats: [json]
   - name: v5-a3-enc
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a3-sched]
     with:
       arch: A3
       functions: [aes_pkg::encrypt]
@@ -82,7 +86,7 @@ fragment:
       data_inputs: [block_]
   - name: v5-a3
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a3-sched]
     with:
       arch: A3
       functions: [aes_pkg::encrypt]
@@ -106,7 +110,7 @@ fragment:
       formats: [json]
   - name: v5-a4-enc
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a4-sched]
     with:
       arch: A4
       functions: [aes_pkg::encrypt]
@@ -114,7 +118,7 @@ fragment:
       data_inputs: [block_]
   - name: v5-a4
     uses: zuspec.synth.ArchLower
-    needs: [a0-rtl, arch-specs]
+    needs: [a0-rtl, arch-specs, v3-a4-sched]
     with:
       arch: A4
       functions: [aes_pkg::encrypt]
