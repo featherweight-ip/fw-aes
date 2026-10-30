@@ -1,6 +1,6 @@
 # Summary of the work
 
-This page reports what was built in fw-aes, in four batches of work, and
+This page reports what was built in fw-aes, in five batches of work, and
 where to find each result. To run the steps yourself, see
 {doc}`walkthrough/index`; for all the numbers, see {doc}`design/baseline`.
 
@@ -20,6 +20,8 @@ where to find each result. To run the steps yourself, see
 4. **Batch 4: re-entry.** Check that the output at any level of the lowering
    can be saved and the lowering completed from it, with the same QoR as a
    single-shot lowering; add tests and report the findings.
+5. **Batch 5: SystemVerilog in the walkthrough.** Show the SystemVerilog used
+   at each walkthrough step, formatted with the sphinx-systemverilog extension.
 
 ## Results
 
@@ -49,6 +51,14 @@ From every re-entrable level the emitted V4/V5 is byte-identical to single-shot,
 so the QoR is the same (A0 111073/999, A2 6604/705, A4 28643/420 LUT4/FF re-run;
 `link-v4-v5` still equivalent). Tests: `tests/reentry/reentry_a0.py`,
 `tests/reentry/reentry_arch.py`. See {doc}`design/reentry`.
+
+What batch 5 added: each walkthrough page ends with a "SystemVerilog" section.
+Hand-written packages, modules and testbenches are documented by
+sphinx-systemverilog (`autosvpackage`/`autosvmodule`, parsed with pyslang);
+generated SV (XLS RTL, V3 stage TLM, V4/V5, contract checkers, the
+co-synthesis top) is shown with `literalinclude` from snapshots in
+`docs/sv/generated/`, refreshed from `rundir/` by `docs/sv/snapshot.py`
+(see {doc}`walkthrough/setup`).
 
 ## Decisions
 
@@ -82,4 +92,8 @@ so the QoR is the same (A0 111073/999, A2 6604/705, A4 28643/420 LUT4/FF re-run;
 - **Re-entry gaps.** No V4 parser (lowering cannot restart from V4); no arch-schedule
   mutation that changes V5 was found (all tried were rejected); first-file picks
   in the task loaders are still a hidden input.
+- **Docs snapshots go stale.** `docs/sv/generated/` is checked in, so it shows the
+  SV of the last `snapshot.py` run; the co-synthesis top is copied by hand (it is
+  not kept in `rundir/`). The autodoc set (`sv_build_units` in `docs/conf.py`) is
+  one file per parse, so macros do not carry across files.
 - **Area is not like for like.** A1-A4 areas are AES-128 encrypt only, but A0's area is XLS AES-128+256.

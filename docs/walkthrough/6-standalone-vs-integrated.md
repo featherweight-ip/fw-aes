@@ -26,3 +26,39 @@ The sweep rows are in `docs/design/sweep-b2-4b.csv`.
 
 **Results:** {doc}`../design/standalone-vs-integrated` and
 {doc}`../design/baseline`, sections "Best-case standalone" and "Sweep".
+
+## SystemVerilog
+
+The two benches move the same 8 blocks over the same bus timing; the
+difference is who programs what in the timed region.
+
+### Standalone: fw-aes + external fw-wb-dma
+
+```{eval-rst}
+.. autosvmodule:: fw_aes_bench_tb
+```
+
+Header and the timed region of the host's `run()`. Per block, the host
+programs DMA channel 0 (mem -> DIN), writes CTRL.START, and programs
+channel 1 (DOUT -> mem); with `FW_AES_BENCH_STREAM` both channels are
+programmed once in HW-handshake mode and `hs_glue` paces them (340 lines in
+all):
+
+```{literalinclude} ../../tests/bench/fw_aes_bench_tb.sv
+:language: systemverilog
+:lines: 1-12,166-181
+```
+
+### Integrated: fw-aes-dma
+
+```{eval-rst}
+.. autosvmodule:: fw_aes_dma_bench_tb
+```
+
+Header and the timed region: the host writes SRC, DST, LEN and START once
+and reads STATUS; fw-aes-dma's own master does the rest (141 lines in all):
+
+```{literalinclude} ../../tests/bench/fw_aes_dma_bench_tb.sv
+:language: systemverilog
+:lines: 1-8,100-112
+```
