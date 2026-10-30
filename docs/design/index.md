@@ -13,6 +13,8 @@ Per-topic notes written while the demo was built. The numbers are in
 - **contracts**: contract records C1-C4 and what each co-synthesis
   transform assumes.
 - **gcm-partition**: GCM V1/V3 partition (design only).
+- **reentry**: which lowering levels can be saved and lowered again, and
+  the tests that show the QoR is the same as single-shot (batch 4).
 
 ```{toctree}
 :maxdepth: 1
@@ -23,4 +25,5 @@ dma-integrated
 standalone-vs-integrated
 contracts
 gcm-partition
+reentry
 ```

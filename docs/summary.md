@@ -1,6 +1,6 @@
 # Summary of the work
 
-This page reports what was built in fw-aes, in three batches of work, and
+This page reports what was built in fw-aes, in four batches of work, and
 where to find each result. To run the steps yourself, see
 {doc}`walkthrough/index`; for all the numbers, see {doc}`design/baseline`.
 
@@ -17,6 +17,9 @@ where to find each result. To run the steps yourself, see
    Show where they differ.
 3. **Batch 3: documentation.** Write this summary, and Sphinx pages that walk
    a user through the steps and show where the results are.
+4. **Batch 4: re-entry.** Check that the output at any level of the lowering
+   can be saved and the lowering completed from it, with the same QoR as a
+   single-shot lowering; add tests and report the findings.
 
 ## Results
 
@@ -38,6 +41,14 @@ while the stream adds the DOUT drain to every op. The best architecture
 depends on the configuration and the bus: at 7 ns the stream cannot tell A0
 from A4, so A4 wins on area, but at 3.5 ns the pipe shows A0 is 1.49x faster.
 See {doc}`design/standalone-vs-integrated`.
+
+What batch 4 found: before it, only the XLS schedule and V5 could be re-entered.
+The libsynth Structure and the zuspec arch schedule now have full JSON forms
+that the lowering reads again; V4 has no parser, and V3 is a timing view only.
+From every re-entrable level the emitted V4/V5 is byte-identical to single-shot,
+so the QoR is the same (A0 111073/999, A2 6604/705, A4 28643/420 LUT4/FF re-run;
+`link-v4-v5` still equivalent). Tests: `tests/reentry/reentry_a0.py`,
+`tests/reentry/reentry_arch.py`. See {doc}`design/reentry`.
 
 ## Decisions
 
@@ -68,4 +79,7 @@ See {doc}`design/standalone-vs-integrated`.
   out of memory); an Fmax for A0; a GCM implementation; bus-width sweeps
   (the TL bus is 32-bit only); bus arbitration; and the area cost of the
   fw-aes-dma master port.
+- **Re-entry gaps.** No V4 parser (lowering cannot restart from V4); no arch-schedule
+  mutation that changes V5 was found (all tried were rejected); first-file picks
+  in the task loaders are still a hidden input.
 - **Area is not like for like.** A1-A4 areas are AES-128 encrypt only, but A0's area is XLS AES-128+256.
