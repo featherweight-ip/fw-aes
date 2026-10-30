@@ -103,6 +103,7 @@ sv_build_units = [
     "../tests/unit/fw_aes_vectors_v5_tb.sv",
     "../tests/unit/fw_aes_dma_csr_tb.sv",
     "../tests/unit/fw_aes_dma_tb.sv",
+    "../tests/unit/fw_aes_vectors_cs_tb.sv",
     "../tests/bench/fw_aes_bench_tb.sv",
     "../tests/bench/fw_aes_dma_bench_tb.sv",
 ]

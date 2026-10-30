@@ -46,6 +46,8 @@ SNAPSHOTS = [
     ("org.fwip.aes.link-v3-v4/link_v3_v4_tb.sv", "ll/link_v3_v4_tb.sv", None),
     # Step 5: contracts
     ("cosynth/proofs/chk_C3.sv", "cosynth/chk_C3.sv", None),
+    # cosynth/aes_pkg__encrypt.cosynth.top.sv is not in rundir/: copied by hand
+    # from the co-synthesis pass output (top module of a0-cs).
 ]
 
 HEAD_NOTE = "// [docs snapshot: first {n} of {total} lines of rundir/{src}]\n"
