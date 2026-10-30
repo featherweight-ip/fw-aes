@@ -10,6 +10,8 @@
 //
 // Sweep knobs (defines; defaults are the baseline): FW_AES_NB blocks (<= 64),
 // FW_AES_BUS_PS bus access time in ps per 32-bit access (7000).
+`include "wb_dma_spl_macros.svh"   // FW_WB_PROTO_IMP
+
 `ifndef FW_AES_NB
 `define FW_AES_NB 8
 `endif

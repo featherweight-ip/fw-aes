@@ -31,10 +31,10 @@ module fw_aes_speed_tb;
 `endif
 
         for (int i = 0; ops < `FW_AES_SPEED_OPS; i++) begin
-            key_t      key  = {$urandom, $urandom, $urandom, $urandom,
+            automatic key_t      key  = {$urandom, $urandom, $urandom, $urandom,
                                $urandom, $urandom, $urandom, $urandom};
-            aes_mode_e mode = (i % 2) ? AES_256 : AES_128;
-            block_t    pt   = {$urandom, $urandom, $urandom, $urandom};
+            automatic aes_mode_e mode = (i % 2) ? AES_256 : AES_128;
+            automatic block_t    pt   = {$urandom, $urandom, $urandom, $urandom};
             block_t    ct, pt2;
 
             view.set_key(key, mode);

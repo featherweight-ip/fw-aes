@@ -18,10 +18,10 @@ module fw_aes_fid_tb;
         rtl.reset();
 
         for (int i = 0; i < 16; i++) begin
-            key_t      key  = {$urandom, $urandom, $urandom, $urandom,
+            automatic key_t      key  = {$urandom, $urandom, $urandom, $urandom,
                                $urandom, $urandom, $urandom, $urandom};
-            aes_mode_e mode = (i % 2) ? AES_256 : AES_128;
-            block_t    pt   = {$urandom, $urandom, $urandom, $urandom};
+            automatic aes_mode_e mode = (i % 2) ? AES_256 : AES_128;
+            automatic block_t    pt   = {$urandom, $urandom, $urandom, $urandom};
             block_t    ct_r, ct_v, pt_r, pt_v;
             int unsigned c_r, c_v;
 
